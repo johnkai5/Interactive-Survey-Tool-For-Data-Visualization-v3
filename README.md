@@ -1,14 +1,14 @@
-This is the repo for version 2 of Interactive Survey Tools For Data Visualization, mirrored from version 1 repo: https://github.com/seanmccoyOSU/Interactive-Survey-Tools-For-Data-Visualizations.
+This is the repo for version 3 of Interactive Survey Tools For Data Visualization, mirrored from version 2 repo: https://github.com/beheyx/Interactive-Survey-Tool-For-Data-Visualization-v2
 
 # Description
-Version 2 will built on version 1 and continuing the develpoment of Interactive Survey Tool For Data Visualization, a web-based survey platform that enables researchers to create interactive, data-driven questionnaires with dynamic visualizations for richer and more precise participant insights.
+Version 3 will build on the previous version by cleaning up the ui, converting the visual files into a more optimized type, and setting up the project for production.
 
 # Team Roster and Contact
-- Bessie: heyux@oregonstate.edu
-- Edward: htoone@oregonstate.edu
 - Kali: pulancop@oregonstate.edu
-- Kaveenaya: srinivak@oregonstate.edu
-- Wesley: trieuw@oregonstate.edu
+- Kai Johnson: johnkai5@oregonstate.edu
+- Norman Nomie: nomien@oregonstate.edu
+- Collin Vassallo: vassallc@oregonstate.edu
+- Xiyuan Liang: liangxiy@oregonstate.edu
 
 # Overview
 The goal of this project is to develop a custom web-based survey tool that allows researchers at Oregon State University (or other

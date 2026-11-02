@@ -128,7 +128,7 @@ Docstrings/Comments: Describe why and any invariants/assumptions.
 
 ## Support & Contact
 Maintainer Contact:
-- Wesley Trieu (Team Facilitator) – via Discord or GitHub mention
+- Norman Nomie (Team Facilitator)
 - Alternate contact: Instructor (for unresolved or escalated issues)
 
 Response Windows:

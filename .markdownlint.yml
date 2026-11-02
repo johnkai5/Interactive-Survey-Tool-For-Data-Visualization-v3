@@ -1,0 +1,2 @@
+# Long prose lines are common in the inherited docs, and tables cannot wrap.
+MD013: false

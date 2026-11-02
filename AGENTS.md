@@ -2,6 +2,18 @@
 
 Instructions for AI coding agents working in this repository. Follow them so every change meets the Definition of Done and passes all CI quality gates.
 
+## Project Documents
+
+Read these before changing code. This file points at them rather than copying
+them, so they are the source of truth when they disagree with anything here.
+
+- `docs/requirements.md`: what the product must do, constraints, and non-goals.
+- `docs/design.md`: services, API routes, data model, and deployment.
+- `docs/risks.md`: the ranked risk register and external prerequisites.
+- `docs/inherited-codebase-audit.md`: known gaps and pitfalls in the inherited
+  code, including setup steps below that do not match the repository yet.
+- `CONTRIBUTING.md`: branching, reviews, and commit conventions.
+
 ## Definition of Done
 
 A change is done only when it:

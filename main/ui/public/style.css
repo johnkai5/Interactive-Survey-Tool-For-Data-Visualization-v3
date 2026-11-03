@@ -3668,3 +3668,261 @@ button.table-btn {
   color: #444444;
   text-align: center;
 }
+
+/* Device Dark Mode */
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ink: #e5e7eb;
+  --line: #4b5563;
+  --panel: #1f2937;
+  --bg: #111827;
+}
+
+/* Main website background */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .qualtrics-main {
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+/* Header sidebar and breadcrumbs */
+html[data-theme="dark"] .qualtrics-header,
+html[data-theme="dark"] .qualtrics-sidebar,
+html[data-theme="dark"] .breadcrumb-nav {
+  background-color: var(--panel);
+  border-color: var(--line);
+}
+
+/* Navigation text */
+html[data-theme="dark"] .header-logo,
+html[data-theme="dark"] .header-link,
+html[data-theme="dark"] .header-link-btn,
+html[data-theme="dark"] .sidebar-item,
+html[data-theme="dark"] .breadcrumb-current {
+  color: var(--ink);
+}
+
+/* Sidebar hover and active status */
+html[data-theme="dark"] .sidebar-item:hover,
+html[data-theme="dark"] .sidebar-item-active {
+  background-color: #374151;
+    color: #ff956b;
+}
+
+/* General panels */
+html[data-theme="dark"] .title,
+html[data-theme="dark"] .editor-header,
+html[data-theme="dark"] .detail-card {
+  background-color: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+
+/* === Dark Mode: Homepage === */
+
+/* Homepage background and sections */
+html[data-theme="dark"] .landing-page,
+html[data-theme="dark"] .landing-features,
+html[data-theme="dark"] .team-section,
+html[data-theme="dark"] .past-contributors-section {
+    background: var(--bg);
+    color: var(--ink);
+}
+
+/* Header and showcase */
+html[data-theme="dark"] .landing-header,
+html[data-theme="dark"] .landing-showcase {
+    background: var(--panel);
+    border-color: var(--line);
+}
+
+/* Hero background */
+html[data-theme="dark"] .landing-hero {
+    background: linear-gradient(180deg, #1f2937, #111827);
+}
+
+/* Main headings */
+html[data-theme="dark"] .landing-logo,
+html[data-theme="dark"] .hero-title,
+html[data-theme="dark"] .section-title,
+html[data-theme="dark"] .feature-card h3,
+html[data-theme="dark"] .team-title,
+html[data-theme="dark"] .team-card h3 {
+    color: var(--ink);
+}
+
+/* Descriptions and supporting text */
+html[data-theme="dark"] .hero-subtitle,
+html[data-theme="dark"] .feature-card p,
+html[data-theme="dark"] .past-contributors-section p {
+    color: #cbd5e1;
+}
+
+/* Team email links */
+html[data-theme="dark"] .team-card a {
+    color: #7dd3fc;
+}
+
+/* Header login button */
+html[data-theme="dark"] .landing-btn-secondary {
+    color: var(--ink);
+    border-color: var(--line);
+    background: var(--panel);
+}
+
+html[data-theme="dark"] .landing-btn-secondary:hover {
+    color: #ff956b;
+    border-color: #ff956b;
+}
+
+
+/* === Dark Mode: Login and Register Pages === */
+
+/* Main authentication page background */
+html[data-theme="dark"] .auth-page,
+html[data-theme="dark"] .auth-main {
+    background: var(--bg);
+    color: var(--ink);
+}
+
+/* Form headings and descriptions */
+html[data-theme="dark"] .auth-form-title,
+html[data-theme="dark"] .form-label {
+    color: var(--ink);
+}
+
+html[data-theme="dark"] .auth-form-subtitle,
+html[data-theme="dark"] .auth-footer p,
+html[data-theme="dark"] .auth-link-secondary {
+    color: #cbd5e1;
+}
+
+/* Form input boxes */
+html[data-theme="dark"] .form-input {
+    background: var(--panel);
+    color: var(--ink);
+    border-color: var(--line);
+}
+
+/* Placeholder text */
+html[data-theme="dark"] .form-input::placeholder {
+    color: #9ca3af;
+}
+
+/* Input focus */
+html[data-theme="dark"] .form-input:focus {
+    border-color: #ff956b;
+    box-shadow: 0 0 0 3px rgba(255, 149, 107, 0.2);
+}
+
+/* Links */
+html[data-theme="dark"] .auth-link,
+html[data-theme="dark"] .auth-link-secondary:hover {
+    color: #ff956b;
+}
+
+
+/* === Manual Theme Selector === */
+
+.theme-selector-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0;
+}
+
+.theme-selector {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.theme-selector:focus-visible {
+  outline: 2px solid #D73F09;
+  outline-offset: 2px;
+}
+
+
+/* === Dark Mode: Dashboard Cards and Empty States === */
+
+/* Dashboard cards */
+html[data-theme="dark"] .dashboard-card {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+/* Dashboard card titles */
+html[data-theme="dark"] .dashboard-card-title {
+  color: var(--ink);
+}
+
+/* Dashboard card descriptions */
+html[data-theme="dark"] .dashboard-card-description,
+html[data-theme="dark"] .stat-label {
+  color: #cbd5e1;
+}
+
+/* Statistics section within dashboard cards */
+html[data-theme="dark"] .dashboard-card-stats {
+  background: var(--bg);
+}
+
+/* Secondary dashboard buttons */
+html[data-theme="dark"] .dashboard-btn-secondary {
+  background: var(--bg);
+  color: #ff956b;
+  border-color: #ff956b;
+}
+
+/* Empty-state panels */
+html[data-theme="dark"] .empty-state,
+html[data-theme="dark"] .table-container .empty-state {
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+/* Secondary text inside empty-state panels */
+html[data-theme="dark"] .empty-state p {
+  color: var(--ink);
+}
+
+
+/* === Dark Mode: Search Boxes and Form Controls === */
+
+/* Search boxes, filters, and other inputs */
+html[data-theme="dark"] .search-input,
+html[data-theme="dark"] .filter-select,
+html[data-theme="dark"] .status-select,
+html[data-theme="dark"] .survey-url-input,
+html[data-theme="dark"] .date-input,
+html[data-theme="dark"] .time-input {
+    background-color: var(--panel);
+    color: var(--ink);
+    border-color: var(--line);
+}
+
+/* Placeholder text */
+html[data-theme="dark"] .search-input::placeholder,
+html[data-theme="dark"] .survey-url-input::placeholder {
+    color: #9ca3af;
+}
+
+/* Highlight an input when selected */
+html[data-theme="dark"] .search-input:focus,
+html[data-theme="dark"] .filter-select:focus,
+html[data-theme="dark"] .status-select:focus,
+html[data-theme="dark"] .survey-url-input:focus,
+html[data-theme="dark"] .date-input:focus,
+html[data-theme="dark"] .time-input:focus {
+    border-color: #ff956b;
+    box-shadow: 0 0 0 3px rgba(255, 149, 107, 0.2);
+}

@@ -54,6 +54,7 @@
 </div>
 
 <script>
+  <!-- Adjusting displayed Created By date to match user's browser timezone -->
   document.querySelectorAll('time.local-date').forEach(function (el) {
     var dateLocal = new Date(el.getAttribute('datetime'));
     if (isNaN(dateLocal.getTime())) return;

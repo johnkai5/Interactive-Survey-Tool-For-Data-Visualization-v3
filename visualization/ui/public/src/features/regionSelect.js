@@ -3,6 +3,7 @@
 // Participant tool: box or lasso select a REGION and store coordinates (not SVG elements).
 
 import { wrapper, svgElement, screenToSVG, page, staticvis, debug } from "../visualizer.js"
+import {actionHistory, SnapshotCommand} from "./actionHistory.js"
 
 export const MODE_REGION_BOX = "regionBox"
 export const MODE_REGION_LASSO = "regionLasso"
@@ -50,6 +51,45 @@ export const regionSelect = (visualizer) => {
   // overlay for UX
   let overlayG = null
   let overlayPath = null
+
+  // Save the answer before start draw
+  let beforeDrawing = null
+
+  const regionReceiver = {
+        read() {
+            return cloneAnswer(answer)
+        },
+
+        restore(region) {
+            drawing = false
+            startPt = null
+            lassoPts = []
+
+            wrapper.classList.remove("drawing-region")
+            answer = cloneAnswer(region)
+
+            if (!answer) {
+                clearOverlay()
+            } else if (answer.type === "rect") {
+                setOverlayD(
+                    buildRectD(
+                        answer.x,
+                        answer.y,
+                        answer.width,
+                        answer.height
+                    )
+                )
+            } else {
+                setOverlayD(buildPolyD(answer.points, true))
+            }
+        },
+    }
+
+    function cancelDrawing() {
+        if (!drawing) return
+
+        regionReceiver.restore(beforeDrawing)
+    }
 
   function ensureOverlay() {
     if (!svgElement) return
@@ -162,6 +202,9 @@ function cloneAnswer(region) {
 }
 
   function beginBox(evt) {
+
+    beforeDrawing = cloneAnswer(answer)
+
     evt.preventDefault()
     drawing = true
     wrapper.classList.add("drawing-region")
@@ -172,6 +215,9 @@ function cloneAnswer(region) {
   }
 
   function beginLasso(evt) {
+
+    beforeDrawing = cloneAnswer(answer)
+
     evt.preventDefault()
     drawing = true
     wrapper.classList.add("drawing-region")
@@ -219,7 +265,14 @@ function cloneAnswer(region) {
     drawing = false
     wrapper.classList.remove("drawing-region")
     finalizeAnswer()
-  }
+
+    const afterDrawing = cloneAnswer(answer)
+
+        if (JSON.stringify(beforeDrawing) !== JSON.stringify(afterDrawing)) {
+            actionHistory.record(new SnapshotCommand(regionReceiver, beforeDrawing, afterDrawing))
+        }
+    }
+
 
   decorated.onFirstLoadSvg = function () {
     visualizer.onFirstLoadSvg()
@@ -242,6 +295,8 @@ function cloneAnswer(region) {
   decorated.onChangeMode = function () {
     visualizer.onChangeMode()
 
+    cancelDrawing()
+
     const isBox = (page.mode === MODE_REGION_BOX)
     const isLasso = (page.mode === MODE_REGION_LASSO)
 
@@ -261,36 +316,32 @@ function cloneAnswer(region) {
 
   document.addEventListener("pointermove", onMove)
   document.addEventListener("pointerup", onUp)
-  document.addEventListener("pointercancel", onUp)  
+  document.addEventListener("pointercancel", cancelDrawing)
+  window.addEventListener("blur", cancelDrawing)
 
   // Exposed API for survey saving + postMessage handlers
   decorated.getRegionAnswer = function () {
     if (drawing) {
-      drawing = false
-      wrapper.classList.remove("drawing-region")
-      finalizeAnswer()
+      onUp()
     }
 
     return cloneAnswer(answer)
   }
 
-  decorated.clearRegion = function () {
-    answer = null
-    startPt = null
-    lassoPts = []
-    clearOverlay()
-  }
+  decorated.clearRegion = function() {
+        cancelDrawing()
 
-  decorated.loadRegion = function (region) {
-    if (!region) return decorated.clearRegion()
-
-    answer = region
-    if (region.type === "rect") {
-      setOverlayD(buildRectD(region.x, region.y, region.width, region.height))
-    } else if (region.type === "polygon") {
-      setOverlayD(buildPolyD(region.points || [], true))
+        actionHistory.capture(regionReceiver, () => {
+            regionReceiver.restore(null)
+        })
     }
-  }
+
+  decorated.loadRegion = function(region) {
+        cancelDrawing()
+        regionReceiver.restore(region)
+
+        actionHistory.clear()
+    }
 
   return decorated
 }

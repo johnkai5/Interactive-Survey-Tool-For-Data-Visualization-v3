@@ -1,11 +1,64 @@
 // enables marking coordinate points on a visual as a participant
 
 const MODELABEL_MARK_POINTS = "markPoints"
-const OPTIONTEXT_UNDO_MARK = "Undo last mark"
+
 const OPTIONTEXT_CLEAR_MARKS = "Clear all marks"
 
 import { visualizationElement, svgElement, wrapper, debug, screenToSVG, page, visualContainer } from "../visualizer.js"
+import { actionHistory } from "./actionHistory.js"
 
+// Create points with a unified structure
+function createPoint(x, y) {
+    const point = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle"
+    )
+
+    point.setAttribute("cx", x)
+    point.setAttribute("cy", y)
+    point.setAttribute("class", "mark")
+
+    return point
+}
+
+const pointsReceiver = {
+    read() {
+        return Array.from(
+            visualizationElement.svg.querySelectorAll(
+                ".mark-container .mark"
+            ),
+            point => ({
+                x: point.getAttribute("cx"),
+                y: point.getAttribute("cy"),
+            })
+        )
+    },
+
+    restore(points) {
+        const svg = visualizationElement.svg
+        let container = svg.querySelector(".mark-container")
+
+        for (const point of svg.querySelectorAll(".mark-container .mark")) {
+            point.remove()
+        }
+
+        if (!container && points.length > 0) {
+            container = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "g"
+            )
+
+            container.classList.add("mark-container")
+            svg.appendChild(container)
+        }
+
+        for (const coordinates of points) {
+            container.appendChild(
+                createPoint(coordinates.x, coordinates.y)
+            )
+        }
+    },
+}
 
 export const markPoints = (visualizer) => {
 
@@ -15,18 +68,11 @@ export const markPoints = (visualizer) => {
         visualizer.onFirstLoadSvg()
         if (page.mode == MODELABEL_MARK_POINTS) {
             // undo button
-            page.addOption(OPTIONTEXT_UNDO_MARK, MODELABEL_MARK_POINTS, () => {
-                // it should just be the last one in the DOM
-                const marks = document.getElementsByClassName("mark")
-                marks[marks.length-1].remove()
-            })
-
-            // clear all button
             page.addOption(OPTIONTEXT_CLEAR_MARKS, MODELABEL_MARK_POINTS, () => {
-                const marks = document.getElementsByClassName("mark")
-                while (marks.length > 0) {
-                    marks[0].remove()
-                }
+                // it should just be the last one in the DOM
+                actionHistory.capture(pointsReceiver, () => {
+                        pointsReceiver.restore([])
+                    })
             })
 
             enableMarkPoints()
@@ -50,29 +96,35 @@ function enableMarkPoints() {
     })
 
     visualContainer.addEventListener("click", (evt) => {
-        if (!mouseDrag) {
-            // make container in SVG to hold marks
-            if (!markContainer) {
-                if (document.getElementsByClassName("mark-container").length > 0)
-                    markContainer = document.getElementsByClassName("mark-container")[0]
-                else {
-                    markContainer = document.createElementNS("http://www.w3.org/2000/svg", "g")
-                    visualizationElement.svg.appendChild(markContainer)
-                    markContainer.classList.add("mark-container")
-                }
+        if (mouseDrag || page.mode !== MODELABEL_MARK_POINTS) return
+
+        const svg = visualizationElement.svg
+        let container = svg.querySelector(".mark-container")
+
+        const max = Number(
+            document.getElementById("question-max").value
+        )
+
+        const total = pointsReceiver.read().length
+
+        if (max > 0 && total >= max) return
+
+        actionHistory.capture(pointsReceiver, () => {
+            if (!container) {
+                container = document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "g"
+                )
+
+                container.classList.add("mark-container")
+                svg.appendChild(container)
             }
 
-            // read maximum values from the iframe
-            const max = document.getElementById("question-max").value
-            const total = markContainer.getElementsByClassName("mark").length 
+            const coordinates = screenToSVG(evt.clientX, evt.clientY, svg)
 
-            if (max <= 0 || total < max) {
-                // create the circle element within the container to represent the mark
-                const pointCoordinates = screenToSVG(evt.clientX, evt.clientY, visualizationElement.svg)
-                const point = document.createElementNS("http://www.w3.org/2000/svg", "circle")
-                markContainer.appendChild(point)
-                point.outerHTML = `<circle cx=\"${pointCoordinates.x}\" cy=\"${pointCoordinates.y}\" class=\"mark\"></circle>`
-            }
-        }
+            container.appendChild(
+                createPoint(coordinates.x, coordinates.y)
+            )
+        })
     })
 }

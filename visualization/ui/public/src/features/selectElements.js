@@ -34,6 +34,28 @@ const OPTIONTEXT_CLEAR_HIGHLIGHTS = "Clear All Highlights"
 
 import { visualizationElement, svgElement, page, wrapper, debug, screenToSVG, autosave, visualContainer } from "../visualizer.js"
 import { findVisualElement } from "./elementEvents.js"
+import { actionHistory } from "./actionHistory.js"
+
+// Receiver for selection
+const selectionReceiver = {
+    // only for save the selected elements visualID, not copy the whole SVG
+    read() {
+        return visualizationElement.getSelectedIds()
+    },
+
+    // restore the selection state
+    restore(ids) {
+        visualizationElement.deselectAll()
+
+        for (const id of ids) {
+            const element = visualizationElement.getElementById(id)
+
+            if (element) {
+                visualizationElement.select(element)
+            }
+        }
+    },
+}
 
 // visualContainer outlives SVG reloads, so the delegated click listener only needs adding once
 let selectionListenerAdded = false
@@ -51,11 +73,17 @@ export const selectElements = (visualizer) => {
 
         if (page.mode == MODELABEL_SELECT_ELEMENTS) {
             page.addOption(OPTIONTEXT_SELECT_ALL, MODELABEL_SELECT_ELEMENTS, () => {
-                visualizationElement.selectAll()
+                // make a select all as a single operation
+                actionHistory.capture(selectionReceiver, () => {
+                        visualizationElement.selectAll()
+                    })
             })
 
             page.addOption(OPTIONTEXT_DESELECT_ALL, MODELABEL_SELECT_ELEMENTS, () => {
-                visualizationElement.deselectAll()
+                // undo once to restore the action of deselect sll
+                actionHistory.capture(selectionReceiver, () => {
+                        visualizationElement.deselectAll()
+                    })
             })
         }
     }
@@ -154,7 +182,9 @@ function EnableSelection() {
         if (!visualElement) return
 
         if (page.mode == MODELABEL_SELECT_ELEMENTS) {
-            visualizationElement.toggleSelection(visualElement)
+            actionHistory.capture(selectionReceiver, () => {
+                visualizationElement.toggleSelection(visualElement)
+            })
         } else if (page.mode == MODELABEL_SET_SELECTABLE) {
             visualizationElement.toggleSelectable(visualElement)
             autosave.save()

@@ -22,7 +22,7 @@
 
 #help-window {
     position: fixed;
-    z-index: 10;
+    z-index: 15;
     left: 7.5%;
     height: 80%;
     width: 71%;

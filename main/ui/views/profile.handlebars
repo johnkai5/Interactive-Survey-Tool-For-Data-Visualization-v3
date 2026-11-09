@@ -27,11 +27,13 @@
       </div>
 
       {{#if user.createdAt}}
-      <div class="profile-row">
-        <span class="profile-label">Member Since</span>
-        <span class="profile-value">{{formatDate user.createdAt}}</span>
-      </div>
-      {{/if}}
+	  <div class="profile-row">
+		<span class="profile-label">Member Since</span>
+		<span class="profile-value">
+		<time class="local-date" datetime="{{user.createdAt}}">{{formatDate user.createdAt}}</time>
+		</span>
+	  </div>
+	  {{/if}}
 
       {{#if user.lastLogin}}
       <div class="profile-row">
@@ -50,3 +52,13 @@
   </form>
 
 </div>
+
+<script>
+  document.querySelectorAll('time.local-date').forEach(function (el) {
+    var dateLocal = new Date(el.getAttribute('datetime'));
+    if (isNaN(dateLocal.getTime())) return;
+    el.textContent = dateLocal.toLocaleDateString(undefined, {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+  });
+</script>

@@ -54,15 +54,17 @@ jobs:
       - name: Start Docker compose
         run: |
           docker compose up --build -d
-      
-      - name: Tear down compose
-        if: always()
-        run: |
-          docker compose down --volumes --remove-orphans
 
       - name: Run npm test
         run: |
           npm test
+
+      # Teardown runs after the tests so they execute while the stack is up;
+      # always() keeps cleanup happening even when the tests fail.
+      - name: Tear down compose
+        if: always()
+        run: |
+          docker compose down --volumes --remove-orphans
 
       - name: Remove leftover MySQL containers
         if: always()

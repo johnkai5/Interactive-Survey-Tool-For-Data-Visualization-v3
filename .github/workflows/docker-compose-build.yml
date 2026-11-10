@@ -59,8 +59,6 @@ jobs:
         run: |
           npm test
 
-      # Teardown runs after the tests so they execute while the stack is up;
-      # always() keeps cleanup happening even when the tests fail.
       - name: Tear down compose
         if: always()
         run: |

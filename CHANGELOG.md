@@ -19,6 +19,8 @@ All notable user-visible changes to this project are documented in this file.
   SVGs load faster and use less memory.
 - Wheel zoom and panning update the view at most once per animation frame. Fast
   trackpad scrolling gives the same zoom with fewer repaints.
+- The home page and About pages now list the version 3 team. Former team
+  members moved to the Past Contributors list on the home page.
 
 ### Developer
 

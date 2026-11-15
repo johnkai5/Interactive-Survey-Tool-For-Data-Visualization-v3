@@ -5,7 +5,7 @@ This document explains how to set up, code, test, review, and release so every c
 ## Code of Conduct
 
 All contributors must follow the OSU Code of Conduct.
-We value professionalism, inclusivity, and respect in all communications. If issues arise, report them to the Team Facilitator (Wesley Trieu) or instructor privately.
+We value professionalism, inclusivity, and respect in all communications. If issues arise, report them to the Team Facilitator (Norman Nomie) or instructor privately.
 
 Definition of Done (DoD):
 - Meet acceptance criteria and not regress exisitng behavior.
@@ -95,7 +95,7 @@ Only PRs with all checks passing may be merged into main.
 
 ## Security & Secrets
 Vulnerability Reporting:
-- Report any security concerns privately to Wesley Trieu (Team Facilitator) or the instructor.
+- Report any security concerns privately to Norman Nomie (Team Facilitator) or the instructor.
 - Do not disclose vulnerabilities publicly until a patch is released.
 
 Prohibited Practices:

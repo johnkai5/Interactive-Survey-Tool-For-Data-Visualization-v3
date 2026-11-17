@@ -317,3 +317,17 @@ describe("POST /questions/{id}/moveDown - move question down", () => {
         expect(res.body).toHaveProperty('error')
     })
 })
+
+describe("PATCH /questions/{id} - Select Elements + Dropdown", () => {
+    test("stores the new question type", async () => {
+        const loginDetails = await registerAndLogin(TEST_USER)
+        const designId = await createSurveyDesign(loginDetails.token)
+        const questionId = await createQuestion(designId, loginDetails.token)
+
+        const res = await request(api).patch(`/questions/${questionId}`).set("Authorization", `Bearer ${loginDetails.token}`).send({ type: "Select Elements + Dropdown" })
+
+        expect(res.statusCode).toBe(200)
+        const updatedQuestion = await Question.findOne({ where: { id: questionId } })
+        expect(updatedQuestion.type).toBe("Select Elements + Dropdown")
+    })
+})

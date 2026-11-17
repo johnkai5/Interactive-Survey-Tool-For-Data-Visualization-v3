@@ -4,6 +4,14 @@ All notable user-visible changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- New question type, Select Elements + Dropdown. In the visual editor, the
+  new Element Questions tool adds a question with answer choices to any
+  element. Participants click each highlighted element and pick an answer
+  from its dropdown. Results and exports list each element with its question
+  and answer.
+
 ### Fixed
 
 - Visualizations with many SVG elements no longer slow down each time the
@@ -25,3 +33,5 @@ All notable user-visible changes to this project are documented in this file.
 - Front-end modules can now be unit tested with Jest in a jsdom environment.
   This adds the `jest-environment-jsdom` and `@babel/preset-env` dev
   dependencies and a `babel.config.js` that only Jest uses.
+- Jest now also transforms `.mjs` files, so `questionTypes.mjs` and its
+  helpers can be unit tested.

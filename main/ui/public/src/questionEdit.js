@@ -143,6 +143,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // update whenever question type is changed
     questionType.addEventListener("change", updateContent)
 
+    // Open the visual editor in the tool this question type needs (its editorMode), on load and when the
+    // type changes. The visual queues messages until its SVG loads, so sending early is safe.
+    const visualFrame = document.getElementById("displayedImage")
+    function sendEditorMode() {
+        if (typeInfo.editorMode && visualFrame?.contentWindow) {
+            visualFrame.contentWindow.postMessage({ setEditorMode: typeInfo.editorMode }, new URL(visualFrame.src).origin)
+        }
+    }
+    visualFrame?.addEventListener("load", sendEditorMode)
+    questionType.addEventListener("change", sendEditorMode)
+    sendEditorMode()
+
     const textEntry = document.getElementById("text")
     textEntry.addEventListener("change", (event) =>{
         newStatus["text"] = event.target.value

@@ -1,5 +1,6 @@
 import {VisualizationElement} from "./visualizationElement.js"
 import {visualizerDecorator} from "./features/visualizerDecorator.js"
+import {getDropdownAnswers, loadDropdownAnswers} from "./features/dropdownQuestions.js"
 
 export let debug = false
 let visualizer
@@ -887,12 +888,24 @@ export const screenToSVG = function(screenX, screenY, svg = visualizationElement
   return { x: out.x, y: out.y };
 };
 
+// Editor tools the question editor page may switch to (see editorMode in questionTypes.mjs).
+// Messages are not origin-checked here, so only these harmless tool switches are accepted.
+const EDITOR_MODES_FROM_PARENT = ["dropdownEditor"]
+
 // Processes a message from the parent window
 function processMessage(event) {
     if (event.data == "count") {
         event.source.postMessage({ type: "count", count: visualizationElement.getNumberOfSelectedElements() }, "*")
     } else if (event.data == "ids") {
         event.source.postMessage({ type: "ids", ids: visualizationElement.getSelectedIds() }, "*")
+    } else if (event.data == "dropdownAnswers") {
+        event.source.postMessage({ type: "dropdownAnswers", ...getDropdownAnswers() }, "*")
+    } else if (event.data?.loadDropdownAnswers) {
+        loadDropdownAnswers(event.data.loadDropdownAnswers)
+    } else if (event.data?.setEditorMode) {
+        if (wrapper.classList.contains("editor") && EDITOR_MODES_FROM_PARENT.includes(event.data.setEditorMode)) {
+            page.mode = event.data.setEditorMode
+        }
     } else if (event.data == "coordinates") {
         let coordinates = []
         const markContainer = document.getElementsByClassName("mark-container")[0]

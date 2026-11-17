@@ -90,6 +90,24 @@ onto the visual, used by the ZIP export).
 - **Question types** are defined in one place,
   `main/ui/public/src/questionTypes.mjs`. A new type is one object in that
   array.
+- **Select Elements + Dropdown** questions are set per element. In the
+  visual editor, the Element Questions tool
+  (`features/dropdownQuestions.js`) stores a question and its answers on the
+  SVG element as `dropdown-question` and `dropdown-choices` (a JSON array)
+  attributes, saved with the visual like `label`. The question editor page
+  opens the visual editor in that tool by posting `{setEditorMode}` (the
+  type's `editorMode`), and the visual editor only accepts modes listed in
+  `EDITOR_MODES_FROM_PARENT`. Participants run in the
+  `selectDropdown` mode, where clicking a marked element opens a popup with its
+  question and a dropdown of answers. The survey page asks the iframe for the
+  answers with the `dropdownAnswers` message, and restores a draft with
+  `{loadDropdownAnswers}`. The response is saved as JSON,
+  `[{"id": "<visualId>", "question": "<text>", "choice": "<text>"}]`, and
+  `main/ui/responseFormat.js` turns it into readable text for the results
+  preview and the Excel and ZIP exports. Publishing does not snapshot the SVG,
+  so editing element questions after publishing changes them for later
+  participants. Each answer keeps the question text it answered for this
+  reason.
 - **Editor features** (zoom and pan, select elements, mark points, region
   select, tooltips, export) are modules in
   `visualization/ui/public/src/features/`. Start from

@@ -1,5 +1,6 @@
 import {VisualizationElement} from "./visualizationElement.js"
 import {visualizerDecorator} from "./features/visualizerDecorator.js"
+import {createSaveProgressGate, formatSavedStatus, setProgressVisible, setSavingIndicator} from "./saveIndicator.js"
 
 export let debug = false
 let visualizer
@@ -218,29 +219,69 @@ export const autosave = {
     statusText: "",
     set statusText(s) {
         this.value = s
-        const saveStatus = document.getElementById("save-status")
+        const saveStatus = document.getElementById("save-status-text") || document.getElementById("save-status")
         if (saveStatus) {
             saveStatus.textContent = s
         }
     },
+    lastSaveDurationMs: null,
+    // Only the newest save may update the bar and status, so an older save
+    // finishing late cannot hide a newer save's bar or claim it is done.
+    saveSeq: 0,
+    progressGate: null,
+    hideTimer: null,
+
     save: async function() {
-        this.statusText = "Preparing to save..."
+        const seq = ++this.saveSeq
+        const isLatest = () => seq === this.saveSeq
+        const startedAt = performance.now()
 
         const progressContainer = document.getElementById("upload-progress-container")
         const progressFill = document.getElementById("upload-progress-fill")
         const progressText = document.getElementById("upload-progress-text")
+        const savingIndicator = document.getElementById("save-indicator")
+        const progressElements = { progress: progressContainer, status: document.getElementById("save-status") }
 
-        // Show progress bar immediately (only if elements exist)
-        if (progressContainer && progressFill && progressText) {
-            progressContainer.hidden = false
-            progressFill.style.width = "0%"
-            progressText.textContent = "Processing SVG..."
+        if (!progressContainer || progressContainer.hidden) setProgressVisible(progressElements, false)
+        setSavingIndicator(savingIndicator, true)
+
+        const setProgress = (percent, text) => {
+            if (!isLatest() || !progressFill || !progressText) return
+            progressFill.style.width = percent + "%"
+            progressText.textContent = text
+        }
+
+        if (this.progressGate) this.progressGate.settle()
+        clearTimeout(this.hideTimer)
+        this.hideTimer = null
+
+        setProgress(0, "Saving...")
+        const gate = createSaveProgressGate({
+            lastDurationMs: this.lastSaveDurationMs,
+            show: () => {
+                if (isLatest()) setProgressVisible(progressElements, true)
+            }
+        })
+        this.progressGate = gate
+
+        const finishSuccess = (completeText) => {
+            gate.settle()
+            if (!isLatest()) return
+            this.lastSaveDurationMs = performance.now() - startedAt
+            this.statusText = formatSavedStatus(new Date())
+            setSavingIndicator(savingIndicator, false)
+
+            if (progressContainer && !progressContainer.hidden) {
+                setProgress(100, completeText)
+                this.hideTimer = setTimeout(() => {
+                    setProgressVisible(progressElements, false)
+                    if (progressFill) progressFill.style.width = "0%"
+                    this.hideTimer = null
+                }, 2000)
+            }
         }
 
         try {
-            // Extract and measure SVG data
-            this.statusText = "Processing SVG..."
-
             // Serialize SVG with XMLSerializer to ensure proper XML formatting
             // (e.g., HTML img tags inside foreignObject are properly closed)
             const serializer = new XMLSerializer()
@@ -249,10 +290,9 @@ export const autosave = {
             const svgSizeBytes = new Blob([svgData]).size
             const svgSizeMB = (svgSizeBytes / 1024 / 1024).toFixed(2)
 
-            if (progressFill && progressText) {
-                progressFill.style.width = "5%"
-                progressText.textContent = `Preparing ${svgSizeMB}MB...`
-            }
+            const savingText = `Saving ${svgSizeMB}MB...`
+            const completeText = `Complete! (${svgSizeMB}MB)`
+            setProgress(5, savingText)
 
             // Use chunked upload for files > 1MB
             const CHUNK_SIZE = 1 * 1024 * 1024
@@ -261,10 +301,7 @@ export const autosave = {
 
             if (!useChunking) {
                 // Small file - use direct PUT upload
-                if (progressFill && progressText) {
-                    progressFill.style.width = "50%"
-                    progressText.textContent = `Uploading ${svgSizeMB}MB...`
-                }
+                setProgress(50, savingText)
 
                 const requestBody = { svg: svgData, detailsOnHover: hoverDetails["enabled"] }
 
@@ -275,15 +312,7 @@ export const autosave = {
                 })
 
                 if (response.ok) {
-                    this.statusText = "Changes saved"
-                    if (progressFill && progressText && progressContainer) {
-                        progressFill.style.width = "100%"
-                        progressText.textContent = "Complete!"
-                        setTimeout(() => {
-                            progressContainer.hidden = true
-                            progressFill.style.width = "0%"
-                        }, 2000)
-                    }
+                    finishSuccess(completeText)
                 } else {
                     const errorText = await response.text()
                     console.error("PUT upload error:", response.status, errorText)
@@ -294,13 +323,9 @@ export const autosave = {
 
             // Large file - use chunked upload for better progress tracking
             const totalChunks = Math.ceil(svgSizeBytes / CHUNK_SIZE)
-            this.statusText = `Uploading ${svgSizeMB}MB in ${totalChunks} chunks...`
 
             // Initialize chunked upload session
-            if (progressFill && progressText) {
-                progressFill.style.width = "10%"
-                progressText.textContent = "Initializing upload..."
-            }
+            setProgress(10, savingText)
 
             const initResponse = await fetch(`${baseUrl}/upload/init`, {
                 method: "POST",
@@ -332,20 +357,12 @@ export const autosave = {
                 }
 
                 // Update progress: 10% init + 80% chunks + 10% finalize
-                if (progressFill && progressText) {
-                    const chunkProgress = 10 + (80 * (i + 1) / totalChunks)
-                    progressFill.style.width = chunkProgress + "%"
-                    progressText.textContent = `Uploading: ${i + 1}/${totalChunks} chunks (${svgSizeMB}MB)`
-                }
-                this.statusText = `Uploading chunk ${i + 1}/${totalChunks}...`
+                const chunkProgress = 10 + (80 * (i + 1) / totalChunks)
+                setProgress(chunkProgress, savingText)
             }
 
             // Finalize upload and save to database
-            if (progressFill && progressText) {
-                progressFill.style.width = "95%"
-                progressText.textContent = "Finalizing..."
-            }
-            this.statusText = "Finalizing upload..."
+            setProgress(95, savingText)
 
             const finalizeResponse = await fetch(`${baseUrl}/upload/finalize`, {
                 method: "POST",
@@ -359,25 +376,17 @@ export const autosave = {
                 throw new Error(`Failed to finalize upload: ${finalizeResponse.status}`)
             }
 
-            // Upload complete
-            this.statusText = "Changes saved"
-            if (progressFill && progressText && progressContainer) {
-                progressFill.style.width = "100%"
-                progressText.textContent = `Complete! (${svgSizeMB}MB)`
-                setTimeout(() => {
-                    progressContainer.hidden = true
-                    progressFill.style.width = "0%"
-                }, 2000)
-            }
+            finishSuccess(completeText)
 
         } catch (error) {
+            gate.settle()
             console.error("Save error:", error)
             console.error("Error stack:", error.stack)
+            if (!isLatest()) return
             this.statusText = "Error while saving!"
-            if (progressContainer && progressFill) {
-                progressContainer.hidden = true
-                progressFill.style.width = "0%"
-            }
+            setSavingIndicator(savingIndicator, false)
+            setProgressVisible(progressElements, false)
+            if (progressFill) progressFill.style.width = "0%"
             alert(`Upload failed: ${error.message}. Check console for details.`)
         }
     }

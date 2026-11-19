@@ -3926,3 +3926,534 @@ html[data-theme="dark"] .time-input:focus {
     border-color: #ff956b;
     box-shadow: 0 0 0 3px rgba(255, 149, 107, 0.2);
 }
+
+
+/* === Dark Mode: Visualizations Table === */
+
+/* Page heading */
+html[data-theme="dark"] .existing-page .page-header h2 {
+  color: var(--ink);
+}
+
+/* Main table container and background */
+html[data-theme="dark"] .existing-page .table-container,
+html[data-theme="dark"] .existing-page .data-table {
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+/* Table header */
+html[data-theme="dark"] .existing-page .data-table thead {
+  background: #374151;
+  border-bottom-color: var(--line);
+}
+
+html[data-theme="dark"] .existing-page .data-table th {
+  color: var(--ink);
+}
+
+/* Table rows, borders, and text */
+html[data-theme="dark"] .existing-page .data-table tbody tr {
+  border-bottom-color: var(--line);
+}
+
+html[data-theme="dark"] .existing-page .data-table td {
+  color: var(--ink);
+}
+
+/* Hover effects for table rows and sortable headers */
+html[data-theme="dark"] .existing-page .data-table tbody tr:hover,
+html[data-theme="dark"] .existing-page .data-table th.sortable:hover {
+  background: #374151;
+}
+
+/* Visualization names and rename icons */
+html[data-theme="dark"] .existing-page .table-link,
+html[data-theme="dark"] .existing-page .rename-icon {
+  color: #ff956b;
+}
+
+/* Checkboxes */
+html[data-theme="dark"] .existing-page .table-checkbox,
+html[data-theme="dark"] .existing-page .row-checkbox {
+  accent-color: #ff956b;
+}
+
+/* Edit buttons */
+html[data-theme="dark"] .existing-page .table-btn {
+  background: var(--bg);
+  color: #ff956b;
+  border-color: #ff956b;
+}
+
+html[data-theme="dark"] .existing-page .table-btn:hover {
+  background: #D73F09;
+  color: white;
+  border-color: #D73F09;
+}
+
+/* Pagination background and text */
+html[data-theme="dark"] .existing-page .pagination-controls {
+  background: var(--bg);
+  border-top-color: var(--line);
+}
+
+html[data-theme="dark"] .existing-page .pagination-info,
+html[data-theme="dark"] .existing-page .page-indicator {
+  color: var(--ink);
+}
+
+/* Previous and Next buttons */
+html[data-theme="dark"] .existing-page .pagination-btn {
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .existing-page .pagination-btn:hover:not(:disabled) {
+  background: #374151;
+  color: #ff956b;
+  border-color: #ff956b;
+}
+
+/* === Dark Mode: Back to Visualizations Button === */
+
+html[data-theme="dark"] .page-actions .back-button {
+  background-color: #1f2937;
+  color: #ff6b35;
+  border: 2px solid #ff6b35;
+}
+
+html[data-theme="dark"] .page-actions .back-button:hover {
+  background-color: #ff6b35;
+  color: #ffffff;
+}
+
+/* ============================================
+   DARK MODE: AUTHENTICATED FAQ PAGE
+   ============================================ */
+
+/* FAQ category headings */
+html[data-theme="dark"] .faq-auth-category-title {
+  color: var(--ink);
+  border-bottom-color: var(--line);
+  background: linear-gradient(
+      90deg,
+      rgba(215, 63, 9, 0.12) 0%,
+      transparent 100%
+  );
+}
+
+/* FAQ question and answer cards */
+html[data-theme="dark"] .faq-auth-item {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* FAQ card hover effect */
+html[data-theme="dark"] .faq-auth-item:hover {
+  background: #374151;
+  border-color: #ff956b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Question text */
+html[data-theme="dark"] .faq-auth-question {
+  color: #f3f4f6;
+}
+
+/* Orange Q: prefix */
+html[data-theme="dark"] .faq-auth-question::before {
+  color: #ff956b;
+}
+
+/* Answer text */
+html[data-theme="dark"] .faq-auth-answer {
+  color: #d1d5db;
+}
+
+/* Optional page subtitle */
+html[data-theme="dark"] .page-subtitle {
+  color: #9ca3af;
+}
+
+/* ============================================
+   DARK MODE: USER PROFILE PAGE
+   ============================================ */
+
+/* Profile page heading */
+html[data-theme="dark"] .profile-title {
+  color: #f3f4f6;
+}
+
+/* Profile page subtitle */
+html[data-theme="dark"] .profile-subtitle {
+  color: #9ca3af;
+}
+
+/* Account Details card */
+html[data-theme="dark"] .profile-card {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--ink);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Account Details heading */
+html[data-theme="dark"] .profile-card-title {
+  color: #f3f4f6;
+  border-bottom-color: var(--line);
+}
+
+/* Individual profile information rows */
+html[data-theme="dark"] .profile-row {
+  border-bottom-color: var(--line);
+}
+
+/* Username, User ID, and date labels */
+html[data-theme="dark"] .profile-label {
+  color: #9ca3af;
+}
+
+/* Account information values */
+html[data-theme="dark"] .profile-value {
+  color: #e5e7eb;
+}
+
+/* ============================================
+   ISSUE #10: CONSISTENT DELETE BUTTON COLORS
+   ============================================ */
+
+/* Shared destructive-action colors */
+:root {
+  --danger-color: #DC2626; /* Bright red */
+  --danger-hover: #B91C1C; /* Darker red on hover */
+}
+
+/* Filled delete buttons */
+.action-button-danger,
+.bulk-delete-btn,
+.delete-btn-confirm {
+  background-color: var(--danger-color) !important;
+  color: #ffffff !important;
+}
+
+.action-button-danger {
+  border-color: var(--danger-color) !important;
+}
+
+.action-button-danger:hover,
+.bulk-delete-btn:hover,
+.delete-btn-confirm:hover {
+  background-color: var(--danger-hover) !important;
+  color: #ffffff !important;
+}
+
+.action-button-danger:hover {
+  border-color: var(--danger-hover) !important;
+}
+
+/* Outlined delete buttons */
+.delete-button,
+.table-btn.delete-btn {
+  color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.delete-button:hover,
+.table-btn.delete-btn:hover {
+  background-color: var(--danger-hover);
+  border-color: var(--danger-hover);
+  color: #ffffff;
+}
+
+/* Ensure outlined delete buttons remain readable in Dark Mode */
+html[data-theme="dark"] .delete-button,
+html[data-theme="dark"] .existing-page .table-btn.delete-btn {
+  background-color: var(--panel);
+  color: #fda4af;
+  border-color: #fda4af;
+}
+
+html[data-theme="dark"] .delete-button:hover,
+html[data-theme="dark"] .existing-page .table-btn.delete-btn:hover {
+  background-color: var(--danger-hover);
+  border-color: var(--danger-hover);
+  color: #ffffff;
+}
+
+/* ============================================
+   DARK MODE: SURVEY DESIGN EDITOR
+   Issues #4 and #10
+   ============================================ */
+
+/* Survey question cards */
+html[data-theme="dark"] #questions .question-block > .bg-light,
+html[data-theme="dark"] #questions .question-block > .bg-secondary {
+    background-color: var(--panel) !important;
+    color: var(--ink) !important;
+    border-color: var(--line);
+}
+
+/* Question card titles and supporting text */
+html[data-theme="dark"] #questions .question-block .card-body,
+html[data-theme="dark"] #questions .question-block .card-title {
+    color: var(--ink);
+}
+
+/* Edit buttons: OSU orange */
+html[data-theme="dark"] #questions .question-block .btn-primary,
+html[data-theme="dark"] #question-form .btn-primary {
+    background-color: #D73F09;
+    border-color: #D73F09;
+    color: #ffffff;
+}
+
+html[data-theme="dark"] #questions .question-block .btn-primary:hover,
+html[data-theme="dark"] #question-form .btn-primary:hover {
+    background-color: #B23307;
+    border-color: #B23307;
+    color: #ffffff;
+}
+
+/* Delete buttons: bright red */
+html[data-theme="dark"] #questions .question-block .btn-danger,
+html[data-theme="dark"] #question-form .btn-danger {
+    background-color: #DC2626;
+    border-color: #DC2626;
+    color: #ffffff;
+}
+
+html[data-theme="dark"] #questions .question-block .btn-danger:hover,
+html[data-theme="dark"] #question-form .btn-danger:hover {
+    background-color: #B91C1C;
+    border-color: #B91C1C;
+    color: #ffffff;
+}
+
+/* Reorder buttons */
+html[data-theme="dark"] #questions .question-block
+.question-move-form > button.btn.btn-sm.btn-outline-secondary {
+    background-color: var(--bg);
+    color: #ff956b;
+    border-color: #ff956b;
+}
+
+html[data-theme="dark"] #questions .question-block
+.question-move-form > button.btn.btn-sm.btn-outline-secondary:hover {
+    background-color: #D73F09;
+    color: #ffffff;
+    border-color: #D73F09;
+}
+
+/* Survey editor tabs */
+html[data-theme="dark"] .editor-header ~ .nav.nav-tabs .nav-link {
+    background-color: var(--panel);
+    color: var(--ink);
+    border-color: var(--line);
+}
+
+html[data-theme="dark"] .editor-header ~ .nav.nav-tabs .nav-link.active {
+    background-color: #374151;
+    color: #ffffff;
+    border-color: #ff956b;
+    border-bottom-color: #ff956b;
+}
+
+html[data-theme="dark"] .editor-header ~ .nav.nav-tabs .nav-link:hover {
+    color: #ff956b;
+}
+
+/* Survey Settings and Question Editor inputs */
+html[data-theme="dark"] #settings .form-control,
+html[data-theme="dark"] #question-form input.form-control,
+html[data-theme="dark"] #question-form select.form-control,
+html[data-theme="dark"] #question-form textarea.form-control {
+    background-color: var(--panel);
+    color: var(--ink);
+    border-color: var(--line);
+}
+
+/* Input placeholder text */
+html[data-theme="dark"] #settings .form-control::placeholder,
+html[data-theme="dark"] #question-form .form-control::placeholder {
+    color: #9ca3af;
+}
+
+/* Save Changes button */
+html[data-theme="dark"] #save-question-button {
+    background-color: #D73F09;
+    border-color: #D73F09;
+    color: #ffffff;
+}
+
+html[data-theme="dark"] #save-question-button:hover {
+    background-color: #B23307;
+    border-color: #B23307;
+    color: #ffffff;
+}
+
+/* Add Choice button */
+html[data-theme="dark"] #add-choice-btn {
+    background-color: #D73F09;
+    border-color: #D73F09;
+    color: #ffffff;
+}
+
+html[data-theme="dark"] #add-choice-btn:hover {
+    background-color: #B23307;
+    border-color: #B23307;
+    color: #ffffff;
+}
+
+/* ============================================
+   ISSUE #10: QUESTION EDIT / DELETE BUTTONS
+   Applies to both Light and Dark Mode
+   ============================================ */
+
+/* Edit buttons - OSU orange */
+#questions .question-block a.btn.btn-primary {
+  background-color: #D73F09 !important;
+  border-color: #D73F09 !important;
+  color: #ffffff !important;
+  text-decoration: none;
+}
+
+#questions .question-block a.btn.btn-primary:hover {
+  background-color: #B23307 !important;
+  border-color: #B23307 !important;
+  color: #ffffff !important;
+}
+
+/* Delete buttons - bright red */
+#questions .question-block .question-delete-form button.btn.btn-danger {
+  background-color: #DC2626 !important;
+  border-color: #DC2626 !important;
+  color: #ffffff !important;
+}
+
+#questions .question-block .question-delete-form button.btn.btn-danger:hover {
+  background-color: #B91C1C !important;
+  border-color: #B91C1C !important;
+  color: #ffffff !important;
+}
+
+/* ============================================
+ DARK MODE: RETURN TO SURVEY OVERVIEW
+ ============================================ */
+
+html[data-theme="dark"] a.back-button[href^="/surveyDesigns/"] {
+  background-color: var(--panel);
+  color: #ff956b;
+  border-color: #ff956b;
+}
+
+html[data-theme="dark"] a.back-button[href^="/surveyDesigns/"]:hover {
+  background-color: #D73F09;
+  color: #ffffff;
+  border-color: #D73F09;
+}
+
+/* ============================================
+ SURVEY PREVIEW: PLACEHOLDER CONTRAST
+ ============================================ */
+
+.survey-preview .preview-choices em {
+  color: #64748b;
+}
+/* ============================================
+   DARK MODE: SURVEY PREVIEW
+   Issues #4 and #10
+   ============================================ */
+
+/* Preview information banner */
+html[data-theme="dark"] #preview .preview-note {
+  background: #1e3a5f;
+  border-color: #3b5575;
+  color: #bfdbfe;
+}
+
+/* Welcome, Questions, and Conclusion headings */
+html[data-theme="dark"] #preview .preview-section h3 {
+  color: #9ca3af;
+}
+
+/* Main preview cards */
+html[data-theme="dark"] #preview .preview-card {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--ink);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Survey title and conclusion title */
+html[data-theme="dark"] #preview .preview-title {
+  color: #f3f4f6;
+}
+
+/* Introduction and conclusion text */
+html[data-theme="dark"] #preview .preview-intro,
+html[data-theme="dark"] #preview .preview-conclusion-text {
+  color: #d1d5db;
+}
+
+/* Question number and question text */
+html[data-theme="dark"] #preview .preview-question-header,
+html[data-theme="dark"] #preview .preview-question-text {
+  color: #e5e7eb;
+}
+
+/* Required question indicator */
+html[data-theme="dark"] #preview .preview-required {
+  color: #fca5a5;
+}
+
+/* Answer section */
+html[data-theme="dark"] #preview .preview-answer-area {
+  background: #111827;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] #preview .preview-answer-label {
+  color: #e5e7eb;
+}
+
+/* Answer choices */
+html[data-theme="dark"] #preview .preview-choice {
+  background: #273449;
+  color: #e5e7eb;
+  border-color: var(--line);
+}
+
+/* Short-answer text field */
+html[data-theme="dark"] #preview .preview-textarea {
+  background: #273449;
+  color: #e5e7eb;
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] #preview .preview-textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Placeholder text, including "No choices defined" */
+html[data-theme="dark"] #preview .preview-placeholder,
+html[data-theme="dark"] #preview .preview-question-text em,
+html[data-theme="dark"] #preview .preview-choices > em {
+  color: #9ca3af;
+}
+
+/* Borders around embedded visualizations */
+html[data-theme="dark"] #preview .preview-visualization {
+  border-color: var(--line);
+}
+
+/* Preview-only Start Survey button */
+html[data-theme="dark"] #preview .preview-button {
+  background: #D73F09;
+  color: #ffffff;
+}

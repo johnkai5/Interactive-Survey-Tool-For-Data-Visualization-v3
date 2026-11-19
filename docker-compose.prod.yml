@@ -80,6 +80,9 @@ services:
       - "8000:8000"
     environment:
       - VISUAL_API_URL=http://visual-api:8080
+      # The browser-facing main app URL, not the internal service name: the visual editor compares it
+      # with the origin of messages from the question editor page that embeds it.
+      - MAIN_UI_URL=${MAIN_UI_URL}
     depends_on:
       - visual-api
 

@@ -1,12 +1,14 @@
 // Mock axios before importing anything that uses it
-jest.mock('axios', () => ({
-    create: jest.fn(() => ({
+// Every axios.create() returns the same instance, so tests can check calls to the visualization API.
+jest.mock('axios', () => {
+    const visualApi = {
         get: jest.fn().mockResolvedValue({ data: { svg: '<svg></svg>' } }),
         post: jest.fn().mockResolvedValue({ data: { id: 999 } }),
         put: jest.fn().mockResolvedValue({ data: {} }),
         delete: jest.fn().mockResolvedValue({ data: {} })
-    }))
-}))
+    }
+    return { create: jest.fn(() => visualApi), visualApi }
+})
 
 // Use temporary, in-memory db for testing
 jest.mock('../../../main/api/lib/sequelize', () => {
@@ -315,5 +317,79 @@ describe("POST /questions/{id}/moveDown - move question down", () => {
 
         expect(res.statusCode).toBe(401)
         expect(res.body).toHaveProperty('error')
+    })
+})
+
+describe("PATCH /questions/{id} - Select Elements + Dropdown", () => {
+    test("stores the new question type", async () => {
+        const loginDetails = await registerAndLogin(TEST_USER)
+        const designId = await createSurveyDesign(loginDetails.token)
+        const questionId = await createQuestion(designId, loginDetails.token)
+
+        const res = await request(api).patch(`/questions/${questionId}`).set("Authorization", `Bearer ${loginDetails.token}`).send({ type: "Select Elements + Dropdown" })
+
+        expect(res.statusCode).toBe(200)
+        const updatedQuestion = await Question.findOne({ where: { id: questionId } })
+        expect(updatedQuestion.type).toBe("Select Elements + Dropdown")
+    })
+
+    describe("changing to another type", () => {
+        const { visualApi } = require('axios')
+        const SVG_WITH_QUESTION = '<svg><rect visualId="3" dropdown-question="Apples?" dropdown-choices="[&quot;Yes&quot;]"/></svg>'
+
+        // A dropdown question with its own visual (content id 42), as the editor leaves it. Tests queue
+        // only the visual API replies they use (mockResolvedValueOnce), so nothing carries into later tests.
+        async function dropdownQuestionWithVisual() {
+            const loginDetails = await registerAndLogin(TEST_USER)
+            const designId = await createSurveyDesign(loginDetails.token)
+            const questionId = await createQuestion(designId, loginDetails.token)
+            await Question.update({ type: "Select Elements + Dropdown", visualizationContentId: 42 }, { where: { id: questionId } })
+            visualApi.get.mockClear()
+            visualApi.put.mockClear()
+            return { questionId, token: loginDetails.token }
+        }
+
+        test("removes the element questions from the question's visual", async () => {
+            const { questionId, token } = await dropdownQuestionWithVisual()
+            visualApi.get.mockResolvedValueOnce({ data: { svg: SVG_WITH_QUESTION } })
+
+            const res = await request(api).patch(`/questions/${questionId}`).set("Authorization", `Bearer ${token}`).send({ type: "Select Elements" })
+
+            expect(res.statusCode).toBe(200)
+            expect(visualApi.get).toHaveBeenCalledWith('/42')
+            expect(visualApi.put).toHaveBeenCalledWith('/42', { svg: '<svg><rect visualId="3"/></svg>' })
+        })
+
+        test("does not rewrite a visual that has no element questions", async () => {
+            const { questionId, token } = await dropdownQuestionWithVisual()
+            visualApi.get.mockResolvedValueOnce({ data: { svg: '<svg><rect visualId="3"/></svg>' } })
+
+            await request(api).patch(`/questions/${questionId}`).set("Authorization", `Bearer ${token}`).send({ type: "Radio Choice" })
+
+            expect(visualApi.get).toHaveBeenCalledWith('/42')
+            expect(visualApi.put).not.toHaveBeenCalled()
+        })
+
+        test("still saves the new type when the visual cannot be cleaned", async () => {
+            const { questionId, token } = await dropdownQuestionWithVisual()
+            visualApi.get.mockRejectedValueOnce(new Error("visual API unreachable"))
+            const consoleError = jest.spyOn(console, "error").mockImplementation(() => {})
+
+            const res = await request(api).patch(`/questions/${questionId}`).set("Authorization", `Bearer ${token}`).send({ type: "Radio Choice" })
+
+            expect(res.statusCode).toBe(200)
+            expect((await Question.findOne({ where: { id: questionId } })).type).toBe("Radio Choice")
+            expect(consoleError).toHaveBeenCalled()
+            consoleError.mockRestore()
+        })
+
+        test("leaves the visual alone when the type stays the same", async () => {
+            const { questionId, token } = await dropdownQuestionWithVisual()
+
+            await request(api).patch(`/questions/${questionId}`).set("Authorization", `Bearer ${token}`).send({ type: "Select Elements + Dropdown", text: "Renamed" })
+            await request(api).patch(`/questions/${questionId}`).set("Authorization", `Bearer ${token}`).send({ text: "No type sent" })
+
+            expect(visualApi.put).not.toHaveBeenCalled()
+        })
     })
 })

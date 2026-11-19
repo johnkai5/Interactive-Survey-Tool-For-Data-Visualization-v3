@@ -5,6 +5,7 @@ const { requireAuthentication } = require('../lib/auth')
 const { handleErrors, getResourceById } = require('../lib/error')
 const { SurveyDesign } = require('../model/SurveyDesign')
 const sequelize = require('../lib/sequelize')
+const { stripDropdownQuestions, leavesDropdownType } = require('../lib/dropdownQuestions')
 
 // setup express router
 const express = require('express');
@@ -111,6 +112,20 @@ router.patch('/:id', requireAuthentication, handleErrors(async (req, res, next) 
     } else if (req.body.visualizationId < 0) {
       await visualApi.delete(`/${visualizationContentId}`)
       visualizationContentId = null
+    }
+
+    // Backs up the question editor page, which clears element questions when the type changes, so a
+    // failure here is logged rather than stopping the question from saving.
+    if (visualizationContentId && leavesDropdownType(question.type, req.body.type)) {
+      try {
+        const visual = await visualApi.get(`/${visualizationContentId}`)
+        const stripped = stripDropdownQuestions(visual.data.svg)
+        if (stripped !== visual.data.svg) {
+          await visualApi.put(`/${visualizationContentId}`, { svg: stripped })
+        }
+      } catch (error) {
+        console.error(`Could not remove element questions from visualization ${visualizationContentId}:`, error.message)
+      }
     }
 
     await Question.update(req.body, {

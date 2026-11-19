@@ -1,6 +1,7 @@
 const ExcelJS = require("exceljs");
 const archiver = require("archiver");
 const axios = require("axios");
+const { formatResponse } = require("../../../responseFormat");
 
 function hasAnyPoints(resp) {
   return typeof resp === "string" && resp.trim().length > 0;
@@ -43,7 +44,7 @@ async function buildSurveyZipBundle({ pub, visualUiUrl }) {
       const respCell = row.getCell(2);
 
       if (!isImageBasedExport) {
-        respCell.value = answer.response ?? "";
+        respCell.value = formatResponse(question.type, answer.response) ?? "";
         continue;
       }
 

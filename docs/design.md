@@ -90,6 +90,39 @@ onto the visual, used by the ZIP export).
 - **Question types** are defined in one place,
   `main/ui/public/src/questionTypes.mjs`. A new type is one object in that
   array.
+- **Select Elements + Dropdown** questions are set per element. The code is in
+  `visualization/ui/public/src/features/dropdownQuestions.js` (page wiring)
+  and `dropdownQuestionData.js` (pure helpers).
+  - **Storage:** each question and its answers are attributes on the SVG
+    element, `dropdown-question` and `dropdown-choices` (a JSON array), saved
+    with the visual like `label`. There is no database or API change.
+  - **Editing:** the visual editor's Element Questions tool edits them. It is
+    hidden until the question editor page opens it by posting
+    `{setEditorMode}` (the type's `editorMode`). The visual editor only accepts
+    modes listed in `EDITOR_MODES_FROM_PARENT`.
+  - **Trusted messages:** the visual editor ignores `{setEditorMode}` and
+    `{hideDropdownEditor}` unless they come from the window embedding it and
+    from the main app's origin (`parentMessages.js`). `visualization/ui`
+    renders that origin into the page from `MAIN_UI_URL`. If `MAIN_UI_URL` is
+    unset, both messages are ignored and the Element Questions tool never
+    appears.
+  - **Answering:** participants run in the `selectDropdown` mode, where
+    clicking a marked element opens a popup with its question and a dropdown
+    of answers. The survey page reads the answers with the `dropdownAnswers`
+    message and restores a draft with `{loadDropdownAnswers}`.
+  - **Responses:** saved as JSON,
+    `[{"id": "<visualId>", "question": "<text>", "choice": "<text>"}]`.
+    `main/ui/responseFormat.js` turns them into readable text for the results
+    preview and the Excel and ZIP exports.
+  - **Publishing** does not snapshot the SVG, so editing element questions
+    after publishing changes them for later participants. Each answer keeps
+    the question text it answered for this reason.
+  - **Changing type:** choosing another type in the question editor only
+    posts `{hideDropdownEditor}`, which hides the Element Questions tool. The
+    element questions stay in the SVG, so switching back or leaving without
+    saving loses nothing. They are removed only when the new type is saved:
+    `PATCH /questions/:id` strips them (`main/api/lib/dropdownQuestions.js`),
+    logging rather than failing if the visual API cannot be reached.
 - **Editor features** (zoom and pan, select elements, mark points, region
   select, tooltips, export) are modules in
   `visualization/ui/public/src/features/`. Start from

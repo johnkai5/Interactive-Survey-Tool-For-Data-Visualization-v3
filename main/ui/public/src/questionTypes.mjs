@@ -58,6 +58,10 @@
  *          // function that is called when the visualization window is finsished loading while taking the survey
  *          // this function is capable of manipulating the DOM
  * 
+ *      (optional) editorMode: string
+ *          // visual editor tool to open when editing a question of this type, so instructors land in the tool they need
+ *          // the visual editor only accepts modes listed in EDITOR_MODES_FROM_PARENT (visualization/ui/public/src/visualizer.js)
+ * 
  *      (optional) pageRenderOptions: Object
  *          // object containing addtional options that are passed through when rendering the question page while taking the survey
  *          // you must edit takeSurveyPage.handlebars if you want to change how the html is rendered for the specific question type
@@ -66,6 +70,23 @@
  * 
  ***************************************************************************************************************************************************************/
 
+
+function requestDropdownAnswers(onReply) {
+    const visualURL = document.getElementById("visualURL").getAttribute("url")
+    const visualWindow = document.getElementById("displayedImage").contentWindow
+
+    function messageListener(event) {
+        if (event.origin !== visualURL || event.data?.type !== "dropdownAnswers") return
+        window.removeEventListener("message", messageListener)
+        onReply(event.data.answers || [], event.data.unanswered || 0)
+    }
+
+    // Not {once: true}: other messages from the visual must not use up the listener before the reply.
+    window.addEventListener("message", messageListener)
+    visualWindow.postMessage("dropdownAnswers", visualURL)
+}
+
+export const SELECT_DROPDOWN_TYPE = "Select Elements + Dropdown"
 
 const questionTypes = [
     /**************************************************************************** 
@@ -396,6 +417,57 @@ const questionTypes = [
             const visualWindow = document.getElementById("displayedImage").contentWindow
             visualWindow.postMessage({ selectIds: selectedIds }, visualURL)  
             visualWindow.postMessage({ setMax: max }, visualURL)
+        },
+    },
+    /**************************************************************************** 
+     * Select Elements + Dropdown
+    *****************************************************************************/
+    {
+        name: SELECT_DROPDOWN_TYPE,
+        label: SELECT_DROPDOWN_TYPE,
+        description: "Click an element on the visual below to give it a question and answer choices. Participants click each of those elements and pick an answer from its dropdown.",
+        // Every element that has a question must be answered, so there is nothing to make optional or limit.
+        hasRequired: false,
+        hasMinMax: false,
+        // Choices are set per element in the visual editor (Element Questions tool), not on the question.
+        hasChoices: false,
+        minText: "",
+        maxText: "",
+        requiresVisual: true,
+        visualModeLabel: "selectDropdown",
+        editorMode: "dropdownEditor",
+        getPromptString: function(min, max) {
+            return "Click each highlighted element on the visual to the left and answer its question"
+        },
+        checkRequirement: function(min, max, required, onFailure, onSuccess) {
+            requestDropdownAnswers((answers, unanswered) => {
+                if (unanswered > 0) {
+                    onFailure("Answer the question on every highlighted element")
+                } else {
+                    onSuccess()
+                }
+            })
+        },
+        getResponse: function(onGet) {
+            requestDropdownAnswers((answers) => {
+                onGet(answers.length ? JSON.stringify(answers) : "")
+            })
+        },
+        // Runs twice per page load (responseRestrictions.js and responseHighlightElements.js both call it).
+        // That is safe because the visual replaces its answers with the loaded ones rather than adding to them.
+        onVisualLoaded: function() {
+            const saved = document.getElementById("savedResponse").getAttribute("response")
+            let answers = []
+            try {
+                const parsed = JSON.parse(saved)
+                if (Array.isArray(parsed)) answers = parsed
+            } catch {
+                // An empty draft, or a response saved under another type, means nothing to restore.
+            }
+
+            const visualURL = document.getElementById("visualURL").getAttribute("url")
+            const visualWindow = document.getElementById("displayedImage").contentWindow
+            visualWindow.postMessage({ loadDropdownAnswers: answers }, visualURL)
         },
     },
     /**************************************************************************** 

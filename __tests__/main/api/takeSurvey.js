@@ -246,3 +246,26 @@ describe("PATCH /takeSurvey/{hash} - submit survey answers", () => {
         expect(res.body).toHaveProperty('error')
     })
 })
+
+describe("Select Elements + Dropdown answers", () => {
+    test("stores each element's question and answer unchanged", async () => {
+        const loginDetails = await registerAndLogin(TEST_USER)
+        const designId = await createSurveyDesign(loginDetails.token)
+        await createQuestion(designId, loginDetails.token, { type: "Select Elements + Dropdown" })
+        const published = await publishSurvey(designId, loginDetails.token)
+
+        const surveyRes = await request(api).get(`/takeSurvey/${published.linkHash}`)
+        expect(surveyRes.body.questions[0].type).toBe("Select Elements + Dropdown")
+
+        const response = JSON.stringify([
+            { id: "12", question: "Is this value too high?", choice: "Yes" },
+            { id: "4", question: "Which category fits?", choice: "Fruit" }
+        ])
+        const answers = [{ questionNumber: 1, comment: "", response }]
+        const res = await request(api).patch(`/takeSurvey/${published.linkHash}`).send({ answers })
+
+        expect(res.statusCode).toBe(200)
+        const updatedSurvey = await PublishedSurvey.findOne({ where: { id: published.id } })
+        expect(updatedSurvey.results.participants[0].answers).toEqual(answers)
+    })
+})

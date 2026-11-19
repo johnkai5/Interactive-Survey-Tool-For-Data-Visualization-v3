@@ -1,4 +1,4 @@
-import questionTypes from "./questionTypes.mjs"
+import questionTypes, { SELECT_DROPDOWN_TYPE } from "./questionTypes.mjs"
 
 document.addEventListener('DOMContentLoaded', () => {
     const questionType = document.getElementById("type")
@@ -140,8 +140,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // update on page load
     updateContent()
         
-    // update whenever question type is changed
-    questionType.addEventListener("change", updateContent)
+    // Messages to the visual editor below the form, if the question has a visual. The visual queues
+    // messages until its SVG loads, so sending early is safe.
+    const visualFrame = document.getElementById("displayedImage")
+    function postToVisual(message) {
+        if (visualFrame?.contentWindow) {
+            visualFrame.contentWindow.postMessage(message, new URL(visualFrame.src).origin)
+        }
+    }
+
+    function sendEditorMode() {
+        if (typeInfo.editorMode) postToVisual({ setEditorMode: typeInfo.editorMode })
+    }
+    visualFrame?.addEventListener("load", sendEditorMode)
+    sendEditorMode()
+
+    // Leaving Select Elements + Dropdown only hides its tool. The element questions are deleted by the API
+    // when the new type is saved, so switching away and back before saving keeps them.
+    let previousType = typeInfo
+    questionType.addEventListener("change", () => {
+        updateContent()
+        if (previousType.name === SELECT_DROPDOWN_TYPE && typeInfo.name !== SELECT_DROPDOWN_TYPE) {
+            postToVisual({ hideDropdownEditor: true })
+        }
+        sendEditorMode()
+        previousType = typeInfo
+    })
 
     const textEntry = document.getElementById("text")
     textEntry.addEventListener("change", (event) =>{

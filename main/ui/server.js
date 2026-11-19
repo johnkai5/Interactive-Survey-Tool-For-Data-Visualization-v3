@@ -7,6 +7,7 @@ const compression = require('compression');
 const app = express();
 
 const { buildSurveyZipBundle, streamSurveyZip } = require("./public/src/export/surveyZipExport");
+const { formatResponse } = require("./responseFormat");
 
 
 // Enable gzip compression for all responses
@@ -661,7 +662,7 @@ async function buildSurveyPreviewData(surveyId, token) {
 
       rows.push({
         participantId: p.participantId,
-        response: answer.response,
+        response: formatResponse(question.type, answer.response),
         comment: answer.comment ?? ""
       })
     })
@@ -727,7 +728,7 @@ async function buildSurveyWorkbook(surveyId, token) {
 
       sheet.addRow([
         p.participantId,
-        answer.response,
+        formatResponse(question.type, answer.response),
         answer.comment ?? ""
       ])
     })

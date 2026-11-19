@@ -4,7 +4,7 @@ This is the repo for version 3 of Interactive Survey Tools For Data Visualizatio
 Version 3 will build on the previous version by cleaning up the ui, converting the visual files into a more optimized type, and setting up the project for production.
 
 # Team Roster and Contact
-- Kali: pulancop@oregonstate.edu
+- Kali Pulanco: pulancop@oregonstate.edu
 - Kai Johnson: johnkai5@oregonstate.edu
 - Norman Nomie: nomien@oregonstate.edu
 - Collin Vassallo: vassallc@oregonstate.edu

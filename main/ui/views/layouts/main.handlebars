@@ -4,10 +4,12 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         {{!-- <title>Survey</title> --}}
+        <!-- Detect and apply device dark mode -->
+        <script src="/src/theme.js"></script>
 
-        <link rel="stylesheet" href="/style.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"> </script>
+        <link rel="stylesheet" href="/style.css">
         <link rel="icon" type="image/png" href="/media/favico.png"/>
         
     </head>
@@ -21,6 +23,13 @@
                     <h1 class="header-logo">Interactive Survey Tools</h1>
                 </div>
                 <div class="header-right">
+                    <!-- Manual Theme preference selector -->
+                    <label for="theme-selector" class="theme-selector-label">Appearance:</label>
+                    <select id="theme-selector" class="theme-selector" aria-label="Appearance">
+                        <option value="system">System Default</option>
+                        <option value="light">Light Mode</option>
+                        <option value="dark">Dark Mode</option>
+                    </select>
                     <a href="/profile" class="header-link" title="Profile">Profile</a>
                     <form action="/users/logout" method="POST" style="display: inline;" id="logoutForm">
                         <button class="header-link-btn" type="button" onclick="showLogoutConfirm()">Logout</button>

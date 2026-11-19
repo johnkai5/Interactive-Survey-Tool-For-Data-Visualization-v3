@@ -505,7 +505,7 @@ button, input {
 #dropdown-card {
     position: absolute;
     z-index: 11;
-    width: 16rem;
+    width: 22rem;
 }
 
 .region-select-shape{

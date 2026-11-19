@@ -148,23 +148,29 @@
 
     <!-- Popup for per-element dropdown questions (features/dropdownQuestions.js) -->
     <div id="dropdown-card" class="card shadow-sm" role="dialog" aria-label="Element question" hidden>
-      <div class="card-body p-2">
+      <div class="card-body p-3">
         <div id="dropdown-editor" hidden>
-          <label for="dropdown-question-input" class="form-label small mb-1">Question for this element</label>
-          <input id="dropdown-question-input" class="form-control form-control-sm mb-2" type="text">
-          <div class="small mb-1">Answers</div>
-          <div id="dropdown-answer-list"></div>
-          <button id="dropdown-add-answer" class="btn btn-link btn-sm p-0" type="button">Add answer</button>
-          <p id="dropdown-editor-error" class="text-danger small mb-0 mt-1" hidden></p>
-          <div class="d-flex flex-wrap gap-1 mt-2">
-            <button id="dropdown-save" class="btn btn-primary btn-sm" type="button">Save</button>
-            <button id="dropdown-remove" class="btn btn-outline-danger btn-sm" type="button">Remove question</button>
-            <button id="dropdown-cancel" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
+          <label for="dropdown-question-input" class="form-label mb-2">Question for this element</label>
+          <input id="dropdown-question-input" class="form-control mb-3" type="text">
+          <!-- Same layout as the Question Choices editor in main/ui/views/editquestion.handlebars -->
+          <h6 class="mb-2">Question Choices</h6>
+          <div class="input-group mb-2">
+            <button id="dropdown-add-answer" class="btn btn-primary" type="button">Add
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            </button>
+            <input id="dropdown-answer-input" class="form-control" type="text" placeholder="Enter choice" aria-label="Enter choice">
+          </div>
+          <ul id="dropdown-answer-list" class="list-group"></ul>
+          <p id="dropdown-editor-error" class="text-danger small mb-0 mt-2" hidden></p>
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <button id="dropdown-save" class="btn btn-primary" type="button">Save</button>
+            <button id="dropdown-remove" class="btn btn-outline-danger" type="button">Remove question</button>
+            <button id="dropdown-cancel" class="btn btn-outline-secondary" type="button">Cancel</button>
           </div>
         </div>
         <div id="dropdown-participant" hidden>
-          <label id="dropdown-question-text" for="dropdown-answer-select" class="form-label small mb-1"></label>
-          <select id="dropdown-answer-select" class="form-select form-select-sm"></select>
+          <label id="dropdown-question-text" for="dropdown-answer-select" class="form-label mb-2"></label>
+          <select id="dropdown-answer-select" class="form-select"></select>
         </div>
       </div>
     </div>

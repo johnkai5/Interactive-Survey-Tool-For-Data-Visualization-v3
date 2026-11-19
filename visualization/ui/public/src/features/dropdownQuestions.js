@@ -1,11 +1,6 @@
-// Per-element dropdown questions for the "Select Elements + Dropdown" question type.
-//
-//  - Editor: the "Element Questions" tool. Clicking an element opens a popup where the instructor types
-//    a question and its answer choices. They are saved on the element (see dropdownQuestionData.js).
-//  - Participant (mode selectDropdown): clicking an element that has a question opens a popup with the
-//    question and a dropdown of its answers. An answer is kept as soon as it is picked, and the popup
-//    closes on click-off or Esc. Answers stay here until the survey page asks for them with the
-//    "dropdownAnswers" message (see visualizer.js processMessage).
+// Per-element dropdown questions ("Select Elements + Dropdown"): the editor's Element Questions tool,
+// and the popup participants answer in. Answers stay here until the survey page asks for them with the
+// "dropdownAnswers" message (see visualizer.js processMessage).
 
 import { visualizationElement, svgElement, wrapper, page, visualContainer, autosave } from "../visualizer.js"
 import { findVisualElement } from "./elementEvents.js"
@@ -19,36 +14,28 @@ import {
     placeCard,
     anchorCard,
     followCard,
-    isDrag,
-    nextAnswerStep
+    isDrag
 } from "./dropdownQuestionData.js"
 
 const MODELABEL_EDITOR = "dropdownEditor"
-// The visual editor's default tool, which it returns to when element questions stop applying
 const MODELABEL_DEFAULT_EDITOR = "detailEditor"
 const MODELABEL_PARTICIPANT = "selectDropdown"
 const TOOLTEXT_EDITOR = "Element Questions"
 
-// Participant only and never saved into the SVG, so it can be a class.
 const ANSWERED_CLASS = "answered"
-// Marks the element the popup is open for, so it stays highlighted. Removed before every save so it
-// never ends up in the stored SVG.
+// Removed before every save so it never ends up in the stored SVG
 const EDITING_CLASS = "dropdown-editing"
 
 // Student answers by visualId
 let chosen = new Map()
-// Element the popup is open for, and what had focus before it opened
+// Element the popup is open for
 let current = null
 let returnFocus = null
-// Where the popup sits relative to current, so it can follow the element when the visual moves
 let anchor = null
 let following = false
-// Where the mouse was last pressed, to tell a pan from a click
 let pressedAt = null
-// The Element Questions tool button. Hidden until the question editor page switches to the tool, so it
-// only appears for Select Elements + Dropdown questions.
+// Hidden until the question editor page opens the tool, so it only appears for dropdown questions
 let toolButton = null
-// The popup's parts (visualizer.handlebars), looked up once when the listeners are added
 let ui = null
 
 export const dropdownQuestions = (visualizer) => {
@@ -72,37 +59,23 @@ export const dropdownQuestions = (visualizer) => {
     decoratedVisualizer.onChangeMode = function() {
         visualizer.onChangeMode()
         closeCard()
-        // The question editor page opens this tool for dropdown questions (setEditorMode), which is
-        // the only way into it while the button is hidden.
         if (page.mode === MODELABEL_EDITOR && toolButton) toolButton.hidden = false
     }
 
     return decoratedVisualizer
 }
 
-/**
- * Reply for the survey page's "dropdownAnswers" request.
- * @returns {{answers: Object[], unanswered: number}}
- */
 export function getDropdownAnswers() {
     return collectAnswers(visualizationElement.visualElements, chosen)
 }
 
-/**
- * Replaces the student's answers with saved ones. Replacing rather than merging makes repeated
- * loads safe; the survey page sends the saved answers twice per page load.
- * @param {Object[]} saved
- */
+// Replaces rather than merges, because the survey page sends the saved answers twice per page load
 export function loadDropdownAnswers(saved) {
     chosen = restoreAnswers(saved, visualizationElement.visualElements)
     markAnswered()
 }
 
-/**
- * Removes every element question from the visual and saves it, for when the question is changed to
- * another type. Also hides the Element Questions tool and leaves it, so no new questions can be added.
- * Saves only if something was removed.
- */
+// For when the question changes to another type: no element questions, and no way to add new ones
 export function clearDropdownQuestions() {
     closeCard()
     if (toolButton) toolButton.hidden = true
@@ -118,6 +91,7 @@ function enableListeners() {
         editor: document.getElementById("dropdown-editor"),
         participant: document.getElementById("dropdown-participant"),
         questionInput: document.getElementById("dropdown-question-input"),
+        answerInput: document.getElementById("dropdown-answer-input"),
         answerList: document.getElementById("dropdown-answer-list"),
         error: document.getElementById("dropdown-editor-error"),
         save: document.getElementById("dropdown-save"),
@@ -131,22 +105,18 @@ function enableListeners() {
     ui.card.addEventListener("mousedown", evt => evt.stopPropagation())
     ui.card.addEventListener("keydown", evt => {
         if (evt.key === "Escape") closeCard()
-        // Shift+Enter saves from anywhere in the instructor popup, the same as clicking Save (including
-        // staying open with an error if the question or answers are missing).
         if (evt.key === "Enter" && evt.shiftKey && !ui.editor.hidden) {
             evt.preventDefault()
             ui.save.click()
             return
         }
-        if (evt.key === "Enter" && evt.target.matches("#dropdown-question-input, .dropdown-answer-input")) {
+        if (evt.key === "Enter" && evt.target === ui.questionInput) {
             evt.preventDefault()
-            const inputs = answerInputs()
-            const step = nextAnswerStep(inputs.indexOf(evt.target), inputs.map(input => input.value))
-            if (step === "add") {
-                addAnswerInput("").focus()
-            } else {
-                inputs[step].focus()
-            }
+            ui.answerInput.focus()
+        }
+        if (evt.key === "Enter" && evt.target === ui.answerInput) {
+            evt.preventDefault()
+            addTypedChoice()
         }
     })
 
@@ -177,14 +147,12 @@ function enableListeners() {
         } else if (readElementQuestion(element)) {
             openQuestion(element)
         } else {
-            // An element without a question, such as the background image, counts as clicking off.
             closeCard()
         }
     })
 
-    // Clicks on the page outside the visual (zoom buttons, empty space) also close the popup.
-    // composedPath() is checked rather than contains(), because an answer's × button removes itself
-    // before the click gets here, and a removed button is no longer inside the card.
+    // composedPath() rather than contains(): an answer's × button removes itself before the click gets
+    // here, and a removed button is no longer inside the card.
     document.addEventListener("click", evt => {
         if (isDrag(pressedAt, { x: evt.clientX, y: evt.clientY })) return
         const path = evt.composedPath()
@@ -197,13 +165,12 @@ function enableListeners() {
         if (page.mode === MODELABEL_PARTICIPANT) closeCard()
     })
 
-    document.getElementById("dropdown-add-answer").addEventListener("click", () => {
-        addAnswerInput("").focus()
-    })
+    document.getElementById("dropdown-add-answer").addEventListener("click", addTypedChoice)
 
     ui.save.addEventListener("click", () => {
         if (!current) return
-        const choices = answerInputs().map(input => input.value)
+        // A choice typed but not yet added still counts, so it is not silently lost
+        const choices = [...listedChoices(), ui.answerInput.value]
         if (!writeElementQuestion(current, ui.questionInput.value, choices)) {
             showEditorError("Type a question and at least one answer, or use Remove question.")
             return
@@ -221,9 +188,8 @@ function enableListeners() {
 
     document.getElementById("dropdown-cancel").addEventListener("click", closeCard)
 
-    // The answer is saved as soon as it changes, but the popup stays open until the student clicks off
-    // it or presses Esc. Closing on change was inconsistent: picking the answer that is already chosen
-    // fires no change event (so it stayed open), while arrow keys fire one per step (so it closed early).
+    // Not closed here: re-picking the current answer fires no change event and arrow keys fire one per
+    // step, so closing on change was inconsistent. It closes on click-off or Esc instead.
     ui.answerSelect.addEventListener("change", evt => {
         if (!current) return
         const id = current.getAttribute("visualId")
@@ -241,7 +207,8 @@ function openEditor(element) {
 
     ui.questionInput.value = existing?.question || ""
     ui.answerList.replaceChildren()
-    for (const choice of existing?.choices || ["", ""]) addAnswerInput(choice)
+    for (const choice of existing?.choices || []) addChoice(choice)
+    ui.answerInput.value = ""
     ui.remove.hidden = !existing
     showEditorError("")
 
@@ -261,43 +228,35 @@ function openQuestion(element) {
     ui.answerSelect.focus()
 }
 
-// Adds an answer box to the instructor popup and returns its input
-function addAnswerInput(value) {
-    const row = document.createElement("div")
-    row.className = "input-group input-group-sm mb-1"
+function addTypedChoice() {
+    const choice = ui.answerInput.value.trim()
+    if (choice) addChoice(choice)
+    ui.answerInput.value = ""
+    ui.answerInput.focus()
+}
 
-    const input = document.createElement("input")
-    input.type = "text"
-    input.className = "form-control dropdown-answer-input"
-    input.value = value
+// Same markup as createChoice in main/ui/public/src/questionEdit.js (Multiple Choice and Radio)
+function addChoice(choice) {
+    const item = document.createElement("li")
+    item.className = "list-group-item d-flex align-items-center py-2 px-3"
 
     const remove = document.createElement("button")
     remove.type = "button"
-    remove.className = "btn btn-outline-secondary"
-    remove.textContent = "×"
-    remove.addEventListener("click", () => {
-        row.remove()
-        numberAnswers()
-    })
+    remove.className = "btn btn-outline-danger border-0 p-0 me-2"
+    remove.setAttribute("aria-label", `Remove ${choice}`)
+    remove.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>'
+    remove.addEventListener("click", () => item.remove())
 
-    row.append(input, remove)
-    ui.answerList.appendChild(row)
-    numberAnswers()
-    return input
+    const text = document.createElement("span")
+    text.className = "dropdown-choice-text"
+    text.textContent = choice
+
+    item.append(remove, text)
+    ui.answerList.appendChild(item)
 }
 
-// Screen readers announce answers by number, so the labels are redone whenever an answer is added or
-// removed to keep them matching what is on screen.
-function numberAnswers() {
-    Array.from(ui.answerList.children).forEach((row, index) => {
-        const [input, remove] = row.children
-        input.setAttribute("aria-label", `Answer ${index + 1}`)
-        remove.setAttribute("aria-label", `Remove answer ${index + 1}`)
-    })
-}
-
-function answerInputs() {
-    return Array.from(ui.answerList.getElementsByClassName("dropdown-answer-input"))
+function listedChoices() {
+    return Array.from(ui.answerList.getElementsByClassName("dropdown-choice-text"), text => text.textContent)
 }
 
 function showEditorError(message) {
@@ -305,7 +264,6 @@ function showEditorError(message) {
     ui.error.hidden = !message
 }
 
-// Opens the popup for element with the given section (ui.editor or ui.participant) showing
 function showCard(element, section) {
     if (!current) returnFocus = document.activeElement
     current?.classList.remove(EDITING_CLASS)
@@ -316,8 +274,7 @@ function showCard(element, section) {
     ui.participant.hidden = section !== ui.participant
     ui.card.hidden = false
 
-    // Measure after showing, so the card has a size. On opening, the popup is kept inside the frame;
-    // after that it follows the element as the visual is panned or zoomed.
+    // Measured after showing, so the card has a size
     const frame = wrapper.getBoundingClientRect()
     const target = elementRect(element)
     const position = placeCard(target, { width: ui.card.offsetWidth, height: ui.card.offsetHeight }, { width: frame.width, height: frame.height })
@@ -330,8 +287,7 @@ function showCard(element, section) {
     }
 }
 
-// Panning and zooming change the visual's viewBox without an event to listen for, so while the popup
-// is open it re-measures its element once per frame and moves with it.
+// Panning and zooming give no event to listen for, so the open popup re-measures its element each frame
 function followElement() {
     if (!current) {
         following = false
@@ -363,7 +319,6 @@ function closeCard() {
     returnFocus = null
 }
 
-// Participant view only: answered elements stop pulsing (see style.css).
 function markAnswered() {
     if (page.mode !== MODELABEL_PARTICIPANT || !svgElement) return
     for (const element of visualizationElement.visualElements) {

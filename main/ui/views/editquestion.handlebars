@@ -21,10 +21,6 @@
 
 <form id="question-form" action="/questions/{{id}}/PATCH" method="POST">
 
-    <h5><label for="text">Question Text<a class="help-tooltip" data-faq-id="9" href="#">?</a></label></h5>
-    <textarea class="form-input" type="text" id="text" name="text" rows="4" cols="75" placeholder="Your question here">{{text}}</textarea>
-    <br>
-
     <h5>
         <label for="type">Question Type:<a class="help-tooltip" data-faq-id="10" href="#">?</a></label><br>
         <select class="form-input" name="type" id="type">
@@ -34,6 +30,11 @@
         </select>
         <small id="type-description"></small>
     </h5>
+    <br>
+
+    <h5><label for="text">Question Text<a class="help-tooltip" data-faq-id="9" href="#">?</a></label></h5>
+    <textarea class="form-input" type="text" id="text" name="text" rows="4" cols="75" placeholder="Your question here">{{text}}</textarea>
+    <br>
 
     <section id="multiple-choice-section" hidden>
         <div class="container">

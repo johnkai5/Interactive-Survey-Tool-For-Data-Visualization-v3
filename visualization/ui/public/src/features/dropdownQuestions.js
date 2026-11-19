@@ -13,15 +13,14 @@ import {
     readElementQuestion,
     writeElementQuestion,
     clearElementQuestion,
+    clearAllElementQuestions,
     collectAnswers,
     restoreAnswers,
     placeCard,
     anchorCard,
     followCard,
     isDrag,
-    nextAnswerStep,
-    QUESTION_ATTRIBUTE,
-    CHOICES_ATTRIBUTE
+    nextAnswerStep
 } from "./dropdownQuestionData.js"
 
 const MODELABEL_EDITOR = "dropdownEditor"
@@ -49,8 +48,8 @@ let pressedAt = null
 // The Element Questions tool button. Hidden until the question editor page switches to the tool, so it
 // only appears for Select Elements + Dropdown questions.
 let toolButton = null
-// visualContainer outlives SVG reloads, so the delegated listener only needs adding once
-let listenersAdded = false
+// The popup's parts (visualizer.handlebars), looked up once when the listeners are added
+let ui = null
 
 export const dropdownQuestions = (visualizer) => {
     const decoratedVisualizer = Object.create(visualizer)
@@ -108,32 +107,35 @@ export function clearDropdownQuestions() {
     closeCard()
     if (toolButton) toolButton.hidden = true
     if (page.mode === MODELABEL_EDITOR) page.mode = MODELABEL_DEFAULT_EDITOR
-    let removed = false
-    for (const element of visualizationElement.visualElements) {
-        if (element.hasAttribute(QUESTION_ATTRIBUTE) || element.hasAttribute(CHOICES_ATTRIBUTE)) {
-            clearElementQuestion(element)
-            removed = true
-        }
-    }
-    if (removed) autosave.save()
+    if (clearAllElementQuestions(visualizationElement.visualElements) > 0) autosave.save()
 }
 
 function enableListeners() {
-    if (listenersAdded) return
-    listenersAdded = true
-
-    const card = document.getElementById("dropdown-card")
+    // visualContainer outlives SVG reloads, so the delegated listeners only need adding once
+    if (ui) return
+    ui = {
+        card: document.getElementById("dropdown-card"),
+        editor: document.getElementById("dropdown-editor"),
+        participant: document.getElementById("dropdown-participant"),
+        questionInput: document.getElementById("dropdown-question-input"),
+        answerList: document.getElementById("dropdown-answer-list"),
+        error: document.getElementById("dropdown-editor-error"),
+        save: document.getElementById("dropdown-save"),
+        remove: document.getElementById("dropdown-remove"),
+        questionText: document.getElementById("dropdown-question-text"),
+        answerSelect: document.getElementById("dropdown-answer-select")
+    }
 
     // The wrapper pans on mousedown and cancels the default action, which would stop the popup's
     // inputs and select from taking focus or opening.
-    card.addEventListener("mousedown", evt => evt.stopPropagation())
-    card.addEventListener("keydown", evt => {
+    ui.card.addEventListener("mousedown", evt => evt.stopPropagation())
+    ui.card.addEventListener("keydown", evt => {
         if (evt.key === "Escape") closeCard()
         // Shift+Enter saves from anywhere in the instructor popup, the same as clicking Save (including
         // staying open with an error if the question or answers are missing).
-        if (evt.key === "Enter" && evt.shiftKey && !document.getElementById("dropdown-editor").hidden) {
+        if (evt.key === "Enter" && evt.shiftKey && !ui.editor.hidden) {
             evt.preventDefault()
-            document.getElementById("dropdown-save").click()
+            ui.save.click()
             return
         }
         if (evt.key === "Enter" && evt.target.matches("#dropdown-question-input, .dropdown-answer-input")) {
@@ -141,8 +143,7 @@ function enableListeners() {
             const inputs = answerInputs()
             const step = nextAnswerStep(inputs.indexOf(evt.target), inputs.map(input => input.value))
             if (step === "add") {
-                addAnswerInput("")
-                answerInputs().at(-1).focus()
+                addAnswerInput("").focus()
             } else {
                 inputs[step].focus()
             }
@@ -187,7 +188,7 @@ function enableListeners() {
     document.addEventListener("click", evt => {
         if (isDrag(pressedAt, { x: evt.clientX, y: evt.clientY })) return
         const path = evt.composedPath()
-        if (!path.includes(card) && !path.includes(visualContainer)) closeCard()
+        if (!path.includes(ui.card) && !path.includes(visualContainer)) closeCard()
     })
 
     // A student clicking elsewhere on the survey page moves focus out of this frame. The editor keeps
@@ -197,15 +198,13 @@ function enableListeners() {
     })
 
     document.getElementById("dropdown-add-answer").addEventListener("click", () => {
-        addAnswerInput("")
-        answerInputs().at(-1).focus()
+        addAnswerInput("").focus()
     })
 
-    document.getElementById("dropdown-save").addEventListener("click", () => {
+    ui.save.addEventListener("click", () => {
         if (!current) return
-        const question = document.getElementById("dropdown-question-input").value
         const choices = answerInputs().map(input => input.value)
-        if (!writeElementQuestion(current, question, choices)) {
+        if (!writeElementQuestion(current, ui.questionInput.value, choices)) {
             showEditorError("Type a question and at least one answer, or use Remove question.")
             return
         }
@@ -213,7 +212,7 @@ function enableListeners() {
         autosave.save()
     })
 
-    document.getElementById("dropdown-remove").addEventListener("click", () => {
+    ui.remove.addEventListener("click", () => {
         if (!current) return
         clearElementQuestion(current)
         closeCard()
@@ -225,7 +224,7 @@ function enableListeners() {
     // The answer is saved as soon as it changes, but the popup stays open until the student clicks off
     // it or presses Esc. Closing on change was inconsistent: picking the answer that is already chosen
     // fires no change event (so it stayed open), while arrow keys fire one per step (so it closed early).
-    document.getElementById("dropdown-answer-select").addEventListener("change", evt => {
+    ui.answerSelect.addEventListener("change", evt => {
         if (!current) return
         const id = current.getAttribute("visualId")
         if (evt.target.value) {
@@ -240,33 +239,30 @@ function enableListeners() {
 function openEditor(element) {
     const existing = readElementQuestion(element)
 
-    document.getElementById("dropdown-question-input").value = existing?.question || ""
-    document.getElementById("dropdown-answer-list").replaceChildren()
+    ui.questionInput.value = existing?.question || ""
+    ui.answerList.replaceChildren()
     for (const choice of existing?.choices || ["", ""]) addAnswerInput(choice)
-    document.getElementById("dropdown-remove").hidden = !existing
+    ui.remove.hidden = !existing
     showEditorError("")
 
-    showCard(element, "dropdown-editor")
-    document.getElementById("dropdown-question-input").focus()
+    showCard(element, ui.editor)
+    ui.questionInput.focus()
 }
 
 function openQuestion(element) {
     const { question, choices } = readElementQuestion(element)
-    const select = document.getElementById("dropdown-answer-select")
 
-    document.getElementById("dropdown-question-text").textContent = question
-    select.replaceChildren(new Option("Choose...", ""))
-    for (const choice of choices) select.add(new Option(choice, choice))
-    select.value = chosen.get(element.getAttribute("visualId")) || ""
+    ui.questionText.textContent = question
+    ui.answerSelect.replaceChildren(new Option("Choose...", ""))
+    for (const choice of choices) ui.answerSelect.add(new Option(choice, choice))
+    ui.answerSelect.value = chosen.get(element.getAttribute("visualId")) || ""
 
-    showCard(element, "dropdown-participant")
-    select.focus()
+    showCard(element, ui.participant)
+    ui.answerSelect.focus()
 }
 
+// Adds an answer box to the instructor popup and returns its input
 function addAnswerInput(value) {
-    const list = document.getElementById("dropdown-answer-list")
-    const number = list.children.length + 1
-
     const row = document.createElement("div")
     row.className = "input-group input-group-sm mb-1"
 
@@ -274,45 +270,57 @@ function addAnswerInput(value) {
     input.type = "text"
     input.className = "form-control dropdown-answer-input"
     input.value = value
-    input.setAttribute("aria-label", `Answer ${number}`)
 
     const remove = document.createElement("button")
     remove.type = "button"
     remove.className = "btn btn-outline-secondary"
     remove.textContent = "×"
-    remove.setAttribute("aria-label", `Remove answer ${number}`)
-    remove.addEventListener("click", () => row.remove())
+    remove.addEventListener("click", () => {
+        row.remove()
+        numberAnswers()
+    })
 
     row.append(input, remove)
-    list.appendChild(row)
+    ui.answerList.appendChild(row)
+    numberAnswers()
+    return input
+}
+
+// Screen readers announce answers by number, so the labels are redone whenever an answer is added or
+// removed to keep them matching what is on screen.
+function numberAnswers() {
+    Array.from(ui.answerList.children).forEach((row, index) => {
+        const [input, remove] = row.children
+        input.setAttribute("aria-label", `Answer ${index + 1}`)
+        remove.setAttribute("aria-label", `Remove answer ${index + 1}`)
+    })
 }
 
 function answerInputs() {
-    return Array.from(document.getElementsByClassName("dropdown-answer-input"))
+    return Array.from(ui.answerList.getElementsByClassName("dropdown-answer-input"))
 }
 
 function showEditorError(message) {
-    const error = document.getElementById("dropdown-editor-error")
-    error.textContent = message
-    error.hidden = !message
+    ui.error.textContent = message
+    ui.error.hidden = !message
 }
 
-function showCard(element, sectionId) {
-    const card = document.getElementById("dropdown-card")
+// Opens the popup for element with the given section (ui.editor or ui.participant) showing
+function showCard(element, section) {
     if (!current) returnFocus = document.activeElement
     current?.classList.remove(EDITING_CLASS)
     current = element
     current.classList.add(EDITING_CLASS)
 
-    document.getElementById("dropdown-editor").hidden = sectionId !== "dropdown-editor"
-    document.getElementById("dropdown-participant").hidden = sectionId !== "dropdown-participant"
-    card.hidden = false
+    ui.editor.hidden = section !== ui.editor
+    ui.participant.hidden = section !== ui.participant
+    ui.card.hidden = false
 
     // Measure after showing, so the card has a size. On opening, the popup is kept inside the frame;
     // after that it follows the element as the visual is panned or zoomed.
     const frame = wrapper.getBoundingClientRect()
     const target = elementRect(element)
-    const position = placeCard(target, { width: card.offsetWidth, height: card.offsetHeight }, { width: frame.width, height: frame.height })
+    const position = placeCard(target, { width: ui.card.offsetWidth, height: ui.card.offsetHeight }, { width: frame.width, height: frame.height })
     anchor = anchorCard(target, position)
     moveCard(position)
 
@@ -341,15 +349,13 @@ function elementRect(element) {
 }
 
 function moveCard({ left, top }) {
-    const card = document.getElementById("dropdown-card")
-    card.style.left = `${left}px`
-    card.style.top = `${top}px`
+    ui.card.style.left = `${left}px`
+    ui.card.style.top = `${top}px`
 }
 
 function closeCard() {
-    const card = document.getElementById("dropdown-card")
-    if (!card || card.hidden) return
-    card.hidden = true
+    if (!ui || ui.card.hidden) return
+    ui.card.hidden = true
     current?.classList.remove(EDITING_CLASS)
     current = null
     anchor = null

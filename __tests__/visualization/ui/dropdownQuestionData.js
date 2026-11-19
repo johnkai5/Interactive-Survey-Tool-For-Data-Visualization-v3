@@ -5,6 +5,7 @@ const {
     readElementQuestion,
     writeElementQuestion,
     clearElementQuestion,
+    clearAllElementQuestions,
     questionElements,
     collectAnswers,
     restoreAnswers,
@@ -71,6 +72,16 @@ describe('writeElementQuestion', () => {
         expect(writeElementQuestion(el, question, choices)).toBe(false)
         expect(readElementQuestion(el)).toEqual({ question: "Old?", choices: ["Old"] })
     })
+})
+
+test('clearAllElementQuestions removes full and partial questions and counts them', () => {
+    const full = element("1", "Q1", ["A"])
+    const partial = element("2", undefined, ["B"])
+    const none = element("3")
+
+    expect(clearAllElementQuestions([full, partial, none])).toBe(2)
+    expect([full, partial].some(el => el.hasAttribute(QUESTION_ATTRIBUTE) || el.hasAttribute(CHOICES_ATTRIBUTE))).toBe(false)
+    expect(clearAllElementQuestions([full, partial, none])).toBe(0)
 })
 
 test('clearElementQuestion removes both attributes', () => {

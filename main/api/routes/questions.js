@@ -115,12 +115,17 @@ router.patch('/:id', requireAuthentication, handleErrors(async (req, res, next) 
     }
 
     // Element questions only belong to the dropdown type, so changing away from it removes them from
-    // the question's visual. Done on save, so switching the type back before saving loses nothing.
+    // the question's visual. This backs up the question editor page, which already cleared them when
+    // the type changed, so a failure here is logged rather than stopping the question from saving.
     if (visualizationContentId && leavesDropdownType(question.type, req.body.type)) {
-      const visual = await visualApi.get(`/${visualizationContentId}`)
-      const stripped = stripDropdownQuestions(visual.data.svg)
-      if (stripped !== visual.data.svg) {
-        await visualApi.put(`/${visualizationContentId}`, { svg: stripped })
+      try {
+        const visual = await visualApi.get(`/${visualizationContentId}`)
+        const stripped = stripDropdownQuestions(visual.data.svg)
+        if (stripped !== visual.data.svg) {
+          await visualApi.put(`/${visualizationContentId}`, { svg: stripped })
+        }
+      } catch (error) {
+        console.error(`Could not remove element questions from visualization ${visualizationContentId}:`, error.message)
       }
     }
 

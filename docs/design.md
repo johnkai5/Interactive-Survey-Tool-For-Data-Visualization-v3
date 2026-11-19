@@ -90,29 +90,33 @@ onto the visual, used by the ZIP export).
 - **Question types** are defined in one place,
   `main/ui/public/src/questionTypes.mjs`. A new type is one object in that
   array.
-- **Select Elements + Dropdown** questions are set per element. In the
-  visual editor, the Element Questions tool
-  (`features/dropdownQuestions.js`) stores a question and its answers on the
-  SVG element as `dropdown-question` and `dropdown-choices` (a JSON array)
-  attributes, saved with the visual like `label`. The question editor page
-  opens the visual editor in that tool by posting `{setEditorMode}` (the
-  type's `editorMode`), and the visual editor only accepts modes listed in
-  `EDITOR_MODES_FROM_PARENT`. Participants run in the
-  `selectDropdown` mode, where clicking a marked element opens a popup with its
-  question and a dropdown of answers. The survey page asks the iframe for the
-  answers with the `dropdownAnswers` message, and restores a draft with
-  `{loadDropdownAnswers}`. The response is saved as JSON,
-  `[{"id": "<visualId>", "question": "<text>", "choice": "<text>"}]`, and
-  `main/ui/responseFormat.js` turns it into readable text for the results
-  preview and the Excel and ZIP exports. Publishing does not snapshot the SVG,
-  so editing element questions after publishing changes them for later
-  participants. Each answer keeps the question text it answered for this
-  reason. Changing the question to another type removes the element
-  questions from its visual: the question editor page posts
-  `{clearDropdownQuestions}` to the visual editor as soon as the type changes
-  (which also hides the Element Questions tool; it is shown only after the
-  page opens it with `{setEditorMode}`), and `PATCH /questions/:id` strips them again on save
-  (`main/api/lib/dropdownQuestions.js`) in case that message was lost.
+- **Select Elements + Dropdown** questions are set per element. The code is in
+  `visualization/ui/public/src/features/dropdownQuestions.js` (page wiring)
+  and `dropdownQuestionData.js` (pure helpers).
+  - **Storage:** each question and its answers are attributes on the SVG
+    element, `dropdown-question` and `dropdown-choices` (a JSON array), saved
+    with the visual like `label`. There is no database or API change.
+  - **Editing:** the visual editor's Element Questions tool edits them. It is
+    hidden until the question editor page opens it by posting
+    `{setEditorMode}` (the type's `editorMode`). The visual editor only accepts
+    modes listed in `EDITOR_MODES_FROM_PARENT`.
+  - **Answering:** participants run in the `selectDropdown` mode, where
+    clicking a marked element opens a popup with its question and a dropdown
+    of answers. The survey page reads the answers with the `dropdownAnswers`
+    message and restores a draft with `{loadDropdownAnswers}`.
+  - **Responses:** saved as JSON,
+    `[{"id": "<visualId>", "question": "<text>", "choice": "<text>"}]`.
+    `main/ui/responseFormat.js` turns them into readable text for the results
+    preview and the Excel and ZIP exports.
+  - **Publishing** does not snapshot the SVG, so editing element questions
+    after publishing changes them for later participants. Each answer keeps
+    the question text it answered for this reason.
+  - **Changing type:** leaving this type removes the element questions. The
+    question editor page posts `{clearDropdownQuestions}` as soon as the type
+    changes, which also hides the Element Questions tool. `PATCH
+    /questions/:id` strips them again on save
+    (`main/api/lib/dropdownQuestions.js`), logging rather than failing if the
+    visual API cannot be reached.
 - **Editor features** (zoom and pan, select elements, mark points, region
   select, tooltips, export) are modules in
   `visualization/ui/public/src/features/`. Start from

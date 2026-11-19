@@ -140,29 +140,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // update on page load
     updateContent()
         
-    // update whenever question type is changed
-    questionType.addEventListener("change", updateContent)
-
-    // Open the visual editor in the tool this question type needs (its editorMode), on load and when the
-    // type changes. The visual queues messages until its SVG loads, so sending early is safe.
+    // Messages to the visual editor below the form, if the question has a visual. The visual queues
+    // messages until its SVG loads, so sending early is safe.
     const visualFrame = document.getElementById("displayedImage")
-    function sendEditorMode() {
-        if (typeInfo.editorMode && visualFrame?.contentWindow) {
-            visualFrame.contentWindow.postMessage({ setEditorMode: typeInfo.editorMode }, new URL(visualFrame.src).origin)
+    function postToVisual(message) {
+        if (visualFrame?.contentWindow) {
+            visualFrame.contentWindow.postMessage(message, new URL(visualFrame.src).origin)
         }
     }
+
+    // Open the visual editor in the tool this question type needs (its editorMode)
+    function sendEditorMode() {
+        if (typeInfo.editorMode) postToVisual({ setEditorMode: typeInfo.editorMode })
+    }
     visualFrame?.addEventListener("load", sendEditorMode)
-    questionType.addEventListener("change", sendEditorMode)
     sendEditorMode()
 
-    // Element questions only belong to Select Elements + Dropdown, so changing the type away from it
-    // clears them from the visual straight away. The API also clears them when the question is saved,
-    // in case this message is lost (for example if the page is saved before the visual finishes saving).
+    // On a type change, update the form, then the visual editor. Element questions only belong to
+    // Select Elements + Dropdown, so leaving that type clears them from the visual straight away; the API
+    // clears them again when the question is saved, in case this message is lost.
     let previousType = typeInfo
     questionType.addEventListener("change", () => {
-        if (previousType.name === SELECT_DROPDOWN_TYPE && typeInfo.name !== SELECT_DROPDOWN_TYPE && visualFrame?.contentWindow) {
-            visualFrame.contentWindow.postMessage({ clearDropdownQuestions: true }, new URL(visualFrame.src).origin)
+        updateContent()
+        if (previousType.name === SELECT_DROPDOWN_TYPE && typeInfo.name !== SELECT_DROPDOWN_TYPE) {
+            postToVisual({ clearDropdownQuestions: true })
         }
+        sendEditorMode()
         previousType = typeInfo
     })
 

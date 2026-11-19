@@ -1,9 +1,11 @@
-// Data helpers for per-element dropdown questions ("Select Elements + Dropdown").
+// Pure helpers for per-element dropdown questions ("Select Elements + Dropdown"): reading and writing
+// the questions, collecting and restoring student answers, and the popup's placement, drag detection and
+// Enter-key behaviour. dropdownQuestions.js wires them to the page.
 //
 // An instructor's question for an element is stored on the SVG element itself, as attributes, so it
 // is saved with the visual by autosave like the "label" and "selectable" settings are. Storing it in
 // the SVG means the question needs no database or API change, and it stays attached to the element
-// even if elements are reordered.
+// even if elements are reordered. main/api/lib/dropdownQuestions.js strips the same attributes.
 //
 // This module must not import visualizer.js, which reads the DOM on import, so it can be unit tested.
 
@@ -58,6 +60,22 @@ export function writeElementQuestion(element, question, choices) {
 export function clearElementQuestion(element) {
     element.removeAttribute(QUESTION_ATTRIBUTE)
     element.removeAttribute(CHOICES_ATTRIBUTE)
+}
+
+/**
+ * Removes every element's question, including partial or unusable ones.
+ * @param {Iterable<Element>} elements the visualization's visual elements
+ * @returns {number} how many elements had question data removed
+ */
+export function clearAllElementQuestions(elements) {
+    let removed = 0
+    for (const element of elements) {
+        if (element.hasAttribute(QUESTION_ATTRIBUTE) || element.hasAttribute(CHOICES_ATTRIBUTE)) {
+            clearElementQuestion(element)
+            removed++
+        }
+    }
+    return removed
 }
 
 /**

@@ -1,4 +1,10 @@
 const { stripDropdownQuestions, leavesDropdownType, SELECT_DROPDOWN_TYPE } = require('../../../main/api/lib/dropdownQuestions')
+const questionTypes = require('../../../main/ui/public/src/questionTypes.mjs')
+
+test('uses the type name registered in questionTypes.mjs', () => {
+    // The API cannot import the browser's ES module, so it keeps its own copy of the name
+    expect(SELECT_DROPDOWN_TYPE).toBe(questionTypes.SELECT_DROPDOWN_TYPE)
+})
 
 describe('stripDropdownQuestions', () => {
     test('removes the question and choices from every element and keeps everything else', () => {

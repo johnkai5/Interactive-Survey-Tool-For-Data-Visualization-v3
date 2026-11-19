@@ -114,9 +114,8 @@ router.patch('/:id', requireAuthentication, handleErrors(async (req, res, next) 
       visualizationContentId = null
     }
 
-    // Element questions only belong to the dropdown type, so changing away from it removes them from
-    // the question's visual. This backs up the question editor page, which already cleared them when
-    // the type changed, so a failure here is logged rather than stopping the question from saving.
+    // Backs up the question editor page, which clears element questions when the type changes, so a
+    // failure here is logged rather than stopping the question from saving.
     if (visualizationContentId && leavesDropdownType(question.type, req.body.type)) {
       try {
         const visual = await visualApi.get(`/${visualizationContentId}`)

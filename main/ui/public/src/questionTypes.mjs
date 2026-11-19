@@ -71,8 +71,6 @@
  ***************************************************************************************************************************************************************/
 
 
-// Asks the visual for the student's per-element dropdown answers and passes the reply to onReply.
-// Used by "Select Elements + Dropdown", whose answers live in the iframe until the page saves them.
 function requestDropdownAnswers(onReply) {
     const visualURL = document.getElementById("visualURL").getAttribute("url")
     const visualWindow = document.getElementById("displayedImage").contentWindow
@@ -88,7 +86,6 @@ function requestDropdownAnswers(onReply) {
     visualWindow.postMessage("dropdownAnswers", visualURL)
 }
 
-// Name of the per-element dropdown type; question editor code compares against it.
 export const SELECT_DROPDOWN_TYPE = "Select Elements + Dropdown"
 
 const questionTypes = [
@@ -438,7 +435,6 @@ const questionTypes = [
         maxText: "",
         requiresVisual: true,
         visualModeLabel: "selectDropdown",
-        // Opens the visual editor in the Element Questions tool, where clicking an element edits its question.
         editorMode: "dropdownEditor",
         getPromptString: function(min, max) {
             return "Click each highlighted element on the visual to the left and answer its question"

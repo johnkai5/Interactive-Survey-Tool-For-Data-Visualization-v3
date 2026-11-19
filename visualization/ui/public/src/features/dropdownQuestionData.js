@@ -1,11 +1,7 @@
-// Pure helpers for per-element dropdown questions ("Select Elements + Dropdown"): reading and writing
-// the questions, collecting and restoring student answers, and the popup's placement, drag detection and
-// Enter-key behaviour. dropdownQuestions.js wires them to the page.
+// Pure helpers for per-element dropdown questions, used by dropdownQuestions.js.
 //
-// An instructor's question for an element is stored on the SVG element itself, as attributes, so it
-// is saved with the visual by autosave like the "label" and "selectable" settings are. Storing it in
-// the SVG means the question needs no database or API change, and it stays attached to the element
-// even if elements are reordered. main/api/lib/dropdownQuestions.js strips the same attributes.
+// Questions are stored as attributes on the SVG element, so autosave keeps them with the visual (like
+// "label") and no database change is needed. main/api/lib/dropdownQuestions.js strips the same attributes.
 //
 // This module must not import visualizer.js, which reads the DOM on import, so it can be unit tested.
 
@@ -53,10 +49,6 @@ export function writeElementQuestion(element, question, choices) {
     return true
 }
 
-/**
- * Removes an element's question.
- * @param {Element} element
- */
 export function clearElementQuestion(element) {
     element.removeAttribute(QUESTION_ATTRIBUTE)
     element.removeAttribute(CHOICES_ATTRIBUTE)
@@ -78,11 +70,6 @@ export function clearAllElementQuestions(elements) {
     return removed
 }
 
-/**
- * Returns the elements that have a usable question, in document order.
- * @param {Iterable<Element>} elements the visualization's visual elements
- * @returns {Element[]}
- */
 export function questionElements(elements) {
     return Array.from(elements).filter(element => readElementQuestion(element))
 }
@@ -201,17 +188,4 @@ export function followCard(target, anchor) {
 export function isDrag(down, up, threshold = 4) {
     if (!down) return false
     return Math.hypot(up.x - down.x, up.y - down.y) > threshold
-}
-
-/**
- * What Enter does in the instructor popup: move to the next answer box, or add one after the last.
- * Enter in a blank last box stays put, so repeated presses do not pile up empty answers.
- * @param {number} index answer box Enter was pressed in, or -1 for the question box
- * @param {string[]} answers current answer box values
- * @returns {number|"add"} index of the answer box to focus, or "add" for a new one
- */
-export function nextAnswerStep(index, answers) {
-    if (index + 1 < answers.length) return index + 1
-    if (index >= 0 && !answers[index].trim()) return index
-    return "add"
 }

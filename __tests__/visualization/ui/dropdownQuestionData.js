@@ -13,7 +13,6 @@ const {
     anchorCard,
     followCard,
     isDrag,
-    nextAnswerStep,
     QUESTION_ATTRIBUTE,
     CHOICES_ATTRIBUTE
 } = require('../../../visualization/ui/public/src/features/dropdownQuestionData.js')
@@ -209,27 +208,5 @@ describe('isDrag', () => {
 
     test('a click with no recorded press is not a drag', () => {
         expect(isDrag(null, { x: 30, y: 10 })).toBe(false)
-    })
-})
-
-describe('nextAnswerStep', () => {
-    test('moves from the question to the first answer', () => {
-        expect(nextAnswerStep(-1, ["A", "B"])).toBe(0)
-    })
-
-    test('moves to the next answer box', () => {
-        expect(nextAnswerStep(0, ["A", "B"])).toBe(1)
-    })
-
-    test('adds an answer after a filled-in last box', () => {
-        expect(nextAnswerStep(1, ["A", "B"])).toBe("add")
-    })
-
-    test('adds an answer from the question when there are no answer boxes', () => {
-        expect(nextAnswerStep(-1, [])).toBe("add")
-    })
-
-    test('stays in a blank last box instead of adding another', () => {
-        expect(nextAnswerStep(1, ["A", "  "])).toBe(1)
     })
 })

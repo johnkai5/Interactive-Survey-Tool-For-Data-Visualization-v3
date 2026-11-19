@@ -149,16 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Open the visual editor in the tool this question type needs (its editorMode)
     function sendEditorMode() {
         if (typeInfo.editorMode) postToVisual({ setEditorMode: typeInfo.editorMode })
     }
     visualFrame?.addEventListener("load", sendEditorMode)
     sendEditorMode()
 
-    // On a type change, update the form, then the visual editor. Element questions only belong to
-    // Select Elements + Dropdown, so leaving that type clears them from the visual straight away; the API
-    // clears them again when the question is saved, in case this message is lost.
+    // Leaving Select Elements + Dropdown clears its element questions straight away. The API clears them
+    // again on save, in case this message is lost.
     let previousType = typeInfo
     questionType.addEventListener("change", () => {
         updateContent()

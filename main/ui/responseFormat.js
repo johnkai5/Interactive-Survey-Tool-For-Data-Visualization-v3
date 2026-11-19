@@ -1,8 +1,5 @@
-// Turns stored responses into text people can read in the results preview and spreadsheet exports.
-//
-// Most question types already store readable text, so they pass through unchanged. Types that store
-// structured JSON get a formatter here, so instructors are not handed raw JSON in a spreadsheet cell.
-// This is server-side CommonJS, used by main/ui/server.js and public/src/export/surveyZipExport.js.
+// Readable responses for the results preview and exports. Types that store JSON get a formatter here;
+// the rest already store readable text and pass through.
 
 // Must match the type name in public/src/questionTypes.mjs; it is the key stored on each question.
 const SELECT_DROPDOWN_TYPE = "Select Elements + Dropdown"
@@ -33,11 +30,6 @@ function formatSelectDropdown(response) {
         .join("; ")
 }
 
-/**
- * @param {string} type question type name
- * @param {*} response stored response
- * @returns {*} readable response, or the original value for types without a formatter
- */
 function formatResponse(type, response) {
     if (typeof response !== "string" || response === "") return response
     if (type === SELECT_DROPDOWN_TYPE) return formatSelectDropdown(response)

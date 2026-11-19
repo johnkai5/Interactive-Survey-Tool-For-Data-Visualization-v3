@@ -15,21 +15,40 @@ import {
     clearElementQuestion,
     collectAnswers,
     restoreAnswers,
-    placeCard
+    placeCard,
+    anchorCard,
+    followCard,
+    isDrag,
+    nextAnswerStep,
+    QUESTION_ATTRIBUTE,
+    CHOICES_ATTRIBUTE
 } from "./dropdownQuestionData.js"
 
 const MODELABEL_EDITOR = "dropdownEditor"
+// The visual editor's default tool, which it returns to when element questions stop applying
+const MODELABEL_DEFAULT_EDITOR = "detailEditor"
 const MODELABEL_PARTICIPANT = "selectDropdown"
 const TOOLTEXT_EDITOR = "Element Questions"
 
 // Participant only and never saved into the SVG, so it can be a class.
 const ANSWERED_CLASS = "answered"
+// Marks the element the popup is open for, so it stays highlighted. Removed before every save so it
+// never ends up in the stored SVG.
+const EDITING_CLASS = "dropdown-editing"
 
 // Student answers by visualId
 let chosen = new Map()
 // Element the popup is open for, and what had focus before it opened
 let current = null
 let returnFocus = null
+// Where the popup sits relative to current, so it can follow the element when the visual moves
+let anchor = null
+let following = false
+// Where the mouse was last pressed, to tell a pan from a click
+let pressedAt = null
+// The Element Questions tool button. Hidden until the question editor page switches to the tool, so it
+// only appears for Select Elements + Dropdown questions.
+let toolButton = null
 // visualContainer outlives SVG reloads, so the delegated listener only needs adding once
 let listenersAdded = false
 
@@ -38,11 +57,15 @@ export const dropdownQuestions = (visualizer) => {
 
     decoratedVisualizer.onPageLoadAsEditor = function() {
         visualizer.onPageLoadAsEditor()
-        page.addTool(TOOLTEXT_EDITOR, MODELABEL_EDITOR)
+        toolButton = page.addTool(TOOLTEXT_EDITOR, MODELABEL_EDITOR)
+        toolButton.hidden = true
     }
 
     decoratedVisualizer.onLoadSvg = function() {
         visualizer.onLoadSvg()
+        // Another editor action (such as the Details on Hover checkbox) can autosave while the popup is
+        // open, which would store the highlight class; clear any that came back with the SVG.
+        for (const element of svgElement.querySelectorAll(`.${EDITING_CLASS}`)) element.classList.remove(EDITING_CLASS)
         enableListeners()
         markAnswered()
     }
@@ -50,6 +73,9 @@ export const dropdownQuestions = (visualizer) => {
     decoratedVisualizer.onChangeMode = function() {
         visualizer.onChangeMode()
         closeCard()
+        // The question editor page opens this tool for dropdown questions (setEditorMode), which is
+        // the only way into it while the button is hidden.
+        if (page.mode === MODELABEL_EDITOR && toolButton) toolButton.hidden = false
     }
 
     return decoratedVisualizer
@@ -73,6 +99,25 @@ export function loadDropdownAnswers(saved) {
     markAnswered()
 }
 
+/**
+ * Removes every element question from the visual and saves it, for when the question is changed to
+ * another type. Also hides the Element Questions tool and leaves it, so no new questions can be added.
+ * Saves only if something was removed.
+ */
+export function clearDropdownQuestions() {
+    closeCard()
+    if (toolButton) toolButton.hidden = true
+    if (page.mode === MODELABEL_EDITOR) page.mode = MODELABEL_DEFAULT_EDITOR
+    let removed = false
+    for (const element of visualizationElement.visualElements) {
+        if (element.hasAttribute(QUESTION_ATTRIBUTE) || element.hasAttribute(CHOICES_ATTRIBUTE)) {
+            clearElementQuestion(element)
+            removed = true
+        }
+    }
+    if (removed) autosave.save()
+}
+
 function enableListeners() {
     if (listenersAdded) return
     listenersAdded = true
@@ -84,10 +129,35 @@ function enableListeners() {
     card.addEventListener("mousedown", evt => evt.stopPropagation())
     card.addEventListener("keydown", evt => {
         if (evt.key === "Escape") closeCard()
+        // Shift+Enter saves from anywhere in the instructor popup, the same as clicking Save (including
+        // staying open with an error if the question or answers are missing).
+        if (evt.key === "Enter" && evt.shiftKey && !document.getElementById("dropdown-editor").hidden) {
+            evt.preventDefault()
+            document.getElementById("dropdown-save").click()
+            return
+        }
+        if (evt.key === "Enter" && evt.target.matches("#dropdown-question-input, .dropdown-answer-input")) {
+            evt.preventDefault()
+            const inputs = answerInputs()
+            const step = nextAnswerStep(inputs.indexOf(evt.target), inputs.map(input => input.value))
+            if (step === "add") {
+                addAnswerInput("")
+                answerInputs().at(-1).focus()
+            } else {
+                inputs[step].focus()
+            }
+        }
     })
+
+    // Capture phase, so it records the press before the card or the wrapper's pan handler can stop it.
+    document.addEventListener("mousedown", evt => {
+        pressedAt = { x: evt.clientX, y: evt.clientY }
+    }, true)
 
     visualContainer.addEventListener("click", evt => {
         if (page.mode !== MODELABEL_EDITOR && page.mode !== MODELABEL_PARTICIPANT) return
+        // Releasing the mouse after panning also fires a click; that should not close or open a popup.
+        if (isDrag(pressedAt, { x: evt.clientX, y: evt.clientY })) return
 
         const element = findVisualElement(evt.target, visualizationElement?.svg)
         if (!element) {
@@ -96,7 +166,13 @@ function enableListeners() {
         }
 
         if (page.mode === MODELABEL_EDITOR) {
-            openEditor(element)
+            // A foreignObject wraps an uploaded picture, which is the background, so clicking it counts as
+            // clicking off; questions go on the elements drawn over it.
+            if (element.tagName === "foreignObject") {
+                closeCard()
+            } else {
+                openEditor(element)
+            }
         } else if (readElementQuestion(element)) {
             openQuestion(element)
         } else {
@@ -106,8 +182,12 @@ function enableListeners() {
     })
 
     // Clicks on the page outside the visual (zoom buttons, empty space) also close the popup.
+    // composedPath() is checked rather than contains(), because an answer's × button removes itself
+    // before the click gets here, and a removed button is no longer inside the card.
     document.addEventListener("click", evt => {
-        if (!card.contains(evt.target) && !visualContainer.contains(evt.target)) closeCard()
+        if (isDrag(pressedAt, { x: evt.clientX, y: evt.clientY })) return
+        const path = evt.composedPath()
+        if (!path.includes(card) && !path.includes(visualContainer)) closeCard()
     })
 
     // A student clicking elsewhere on the survey page moves focus out of this frame. The editor keeps
@@ -118,8 +198,7 @@ function enableListeners() {
 
     document.getElementById("dropdown-add-answer").addEventListener("click", () => {
         addAnswerInput("")
-        const inputs = answerInputs()
-        inputs[inputs.length - 1].focus()
+        answerInputs().at(-1).focus()
     })
 
     document.getElementById("dropdown-save").addEventListener("click", () => {
@@ -130,15 +209,15 @@ function enableListeners() {
             showEditorError("Type a question and at least one answer, or use Remove question.")
             return
         }
-        autosave.save()
         closeCard()
+        autosave.save()
     })
 
     document.getElementById("dropdown-remove").addEventListener("click", () => {
         if (!current) return
         clearElementQuestion(current)
-        autosave.save()
         closeCard()
+        autosave.save()
     })
 
     document.getElementById("dropdown-cancel").addEventListener("click", closeCard)
@@ -221,20 +300,48 @@ function showEditorError(message) {
 function showCard(element, sectionId) {
     const card = document.getElementById("dropdown-card")
     if (!current) returnFocus = document.activeElement
+    current?.classList.remove(EDITING_CLASS)
     current = element
+    current.classList.add(EDITING_CLASS)
 
     document.getElementById("dropdown-editor").hidden = sectionId !== "dropdown-editor"
     document.getElementById("dropdown-participant").hidden = sectionId !== "dropdown-participant"
     card.hidden = false
 
-    // Measure after showing, so the card has a size; positions are relative to the wrapper it sits in.
+    // Measure after showing, so the card has a size. On opening, the popup is kept inside the frame;
+    // after that it follows the element as the visual is panned or zoomed.
+    const frame = wrapper.getBoundingClientRect()
+    const target = elementRect(element)
+    const position = placeCard(target, { width: card.offsetWidth, height: card.offsetHeight }, { width: frame.width, height: frame.height })
+    anchor = anchorCard(target, position)
+    moveCard(position)
+
+    if (!following) {
+        following = true
+        requestAnimationFrame(followElement)
+    }
+}
+
+// Panning and zooming change the visual's viewBox without an event to listen for, so while the popup
+// is open it re-measures its element once per frame and moves with it.
+function followElement() {
+    if (!current) {
+        following = false
+        return
+    }
+    moveCard(followCard(elementRect(current), anchor))
+    requestAnimationFrame(followElement)
+}
+
+// Element rectangle relative to the wrapper the popup is positioned in
+function elementRect(element) {
     const frame = wrapper.getBoundingClientRect()
     const target = element.getBoundingClientRect()
-    const { left, top } = placeCard(
-        { left: target.left - frame.left, right: target.right - frame.left, top: target.top - frame.top },
-        { width: card.offsetWidth, height: card.offsetHeight },
-        { width: frame.width, height: frame.height }
-    )
+    return { left: target.left - frame.left, right: target.right - frame.left, top: target.top - frame.top }
+}
+
+function moveCard({ left, top }) {
+    const card = document.getElementById("dropdown-card")
     card.style.left = `${left}px`
     card.style.top = `${top}px`
 }
@@ -243,7 +350,9 @@ function closeCard() {
     const card = document.getElementById("dropdown-card")
     if (!card || card.hidden) return
     card.hidden = true
+    current?.classList.remove(EDITING_CLASS)
     current = null
+    anchor = null
     returnFocus?.focus?.()
     returnFocus = null
 }

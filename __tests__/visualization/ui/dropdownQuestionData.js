@@ -9,6 +9,10 @@ const {
     collectAnswers,
     restoreAnswers,
     placeCard,
+    anchorCard,
+    followCard,
+    isDrag,
+    nextAnswerStep,
     QUESTION_ATTRIBUTE,
     CHOICES_ATTRIBUTE
 } = require('../../../visualization/ui/public/src/features/dropdownQuestionData.js')
@@ -154,5 +158,67 @@ describe('placeCard', () => {
 
     test('stays inside the frame when neither side has room', () => {
         expect(placeCard({ left: 20, right: 480, top: 10 }, card, frame).left).toBe(8)
+    })
+})
+
+describe('anchorCard and followCard', () => {
+    test('a popup on the right follows the element when the visual pans', () => {
+        const anchor = anchorCard({ left: 50, right: 70, top: 30 }, { left: 78, top: 30 })
+
+        expect(followCard({ left: 150, right: 170, top: 10 }, anchor)).toEqual({ left: 178, top: 10 })
+    })
+
+    test('a popup on the left keeps its offset from the left edge when zooming widens the element', () => {
+        const anchor = anchorCard({ left: 450, right: 470, top: 30 }, { left: 342, top: 30 })
+
+        expect(followCard({ left: 400, right: 520, top: 30 }, anchor)).toEqual({ left: 292, top: 30 })
+    })
+
+    test('keeps the vertical offset of a popup that was nudged into the frame', () => {
+        const anchor = anchorCard({ left: 50, right: 70, top: 390 }, { left: 78, top: 312 })
+
+        expect(followCard({ left: 50, right: 70, top: 200 }, anchor).top).toBe(122)
+    })
+
+    test('follows the element off-screen instead of staying inside the frame', () => {
+        const anchor = anchorCard({ left: 50, right: 70, top: 30 }, { left: 78, top: 30 })
+
+        expect(followCard({ left: -500, right: -480, top: -300 }, anchor)).toEqual({ left: -472, top: -300 })
+    })
+})
+
+describe('isDrag', () => {
+    test('a click that barely moves is not a drag', () => {
+        expect(isDrag({ x: 10, y: 10 }, { x: 13, y: 12 })).toBe(false)
+    })
+
+    test('moving further than the threshold is a drag', () => {
+        expect(isDrag({ x: 10, y: 10 }, { x: 30, y: 10 })).toBe(true)
+    })
+
+    test('a click with no recorded press is not a drag', () => {
+        expect(isDrag(null, { x: 30, y: 10 })).toBe(false)
+    })
+})
+
+describe('nextAnswerStep', () => {
+    test('moves from the question to the first answer', () => {
+        expect(nextAnswerStep(-1, ["A", "B"])).toBe(0)
+    })
+
+    test('moves to the next answer box', () => {
+        expect(nextAnswerStep(0, ["A", "B"])).toBe(1)
+    })
+
+    test('adds an answer after a filled-in last box', () => {
+        expect(nextAnswerStep(1, ["A", "B"])).toBe("add")
+    })
+
+    test('adds an answer from the question when there are no answer boxes', () => {
+        expect(nextAnswerStep(-1, [])).toBe("add")
+    })
+
+    test('stays in a blank last box instead of adding another', () => {
+        expect(nextAnswerStep(1, ["A", "  "])).toBe(1)
     })
 })

@@ -141,3 +141,59 @@ export function placeCard(target, card, frame, gap = 8) {
     const top = Math.max(gap, Math.min(target.top, frame.height - card.height - gap))
     return { left, top }
 }
+
+/**
+ * Remembers where the popup sits relative to its element, so it can follow the element when the
+ * visual is panned or zoomed. The offset is kept from the edge the popup was placed beside, so a
+ * popup on the right stays to the right when zooming changes the element's width.
+ * @param {{left: number, right: number, top: number}} target element's rectangle when the popup opened
+ * @param {{left: number, top: number}} position where the popup was placed
+ * @returns {{side: string, dx: number, dy: number}}
+ */
+export function anchorCard(target, position) {
+    const side = position.left >= target.right ? "right" : "left"
+    return {
+        side,
+        dx: position.left - (side === "right" ? target.right : target.left),
+        dy: position.top - target.top
+    }
+}
+
+/**
+ * Where the popup goes for the element's current rectangle. Not kept inside the frame: the popup
+ * moves off-screen with its element, like the rest of the visual.
+ * @param {{left: number, right: number, top: number}} target element's current rectangle
+ * @param {{side: string, dx: number, dy: number}} anchor from anchorCard
+ * @returns {{left: number, top: number}}
+ */
+export function followCard(target, anchor) {
+    return {
+        left: (anchor.side === "right" ? target.right : target.left) + anchor.dx,
+        top: target.top + anchor.dy
+    }
+}
+
+/**
+ * True when the pointer moved far enough between press and release to be a drag (a pan), not a click.
+ * @param {{x: number, y: number}|null} down where the button was pressed
+ * @param {{x: number, y: number}} up where the click happened
+ * @param {number} threshold pixels the pointer may wobble during a click
+ * @returns {boolean}
+ */
+export function isDrag(down, up, threshold = 4) {
+    if (!down) return false
+    return Math.hypot(up.x - down.x, up.y - down.y) > threshold
+}
+
+/**
+ * What Enter does in the instructor popup: move to the next answer box, or add one after the last.
+ * Enter in a blank last box stays put, so repeated presses do not pile up empty answers.
+ * @param {number} index answer box Enter was pressed in, or -1 for the question box
+ * @param {string[]} answers current answer box values
+ * @returns {number|"add"} index of the answer box to focus, or "add" for a new one
+ */
+export function nextAnswerStep(index, answers) {
+    if (index + 1 < answers.length) return index + 1
+    if (index >= 0 && !answers[index].trim()) return index
+    return "add"
+}

@@ -5,6 +5,7 @@ const { requireAuthentication } = require('../lib/auth')
 const { handleErrors, getResourceById } = require('../lib/error')
 const { SurveyDesign } = require('../model/SurveyDesign')
 const sequelize = require('../lib/sequelize')
+const { stripDropdownQuestions, leavesDropdownType } = require('../lib/dropdownQuestions')
 
 // setup express router
 const express = require('express');
@@ -111,6 +112,16 @@ router.patch('/:id', requireAuthentication, handleErrors(async (req, res, next) 
     } else if (req.body.visualizationId < 0) {
       await visualApi.delete(`/${visualizationContentId}`)
       visualizationContentId = null
+    }
+
+    // Element questions only belong to the dropdown type, so changing away from it removes them from
+    // the question's visual. Done on save, so switching the type back before saving loses nothing.
+    if (visualizationContentId && leavesDropdownType(question.type, req.body.type)) {
+      const visual = await visualApi.get(`/${visualizationContentId}`)
+      const stripped = stripDropdownQuestions(visual.data.svg)
+      if (stripped !== visual.data.svg) {
+        await visualApi.put(`/${visualizationContentId}`, { svg: stripped })
+      }
     }
 
     await Question.update(req.body, {

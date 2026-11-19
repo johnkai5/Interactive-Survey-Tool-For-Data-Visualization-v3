@@ -1,6 +1,6 @@
 import {VisualizationElement} from "./visualizationElement.js"
 import {visualizerDecorator} from "./features/visualizerDecorator.js"
-import {getDropdownAnswers, loadDropdownAnswers} from "./features/dropdownQuestions.js"
+import {getDropdownAnswers, loadDropdownAnswers, clearDropdownQuestions} from "./features/dropdownQuestions.js"
 
 export let debug = false
 let visualizer
@@ -173,6 +173,7 @@ export const page = {
         // add button to DOM
         const toolButtons = document.getElementsByClassName("tool-buttons")[0]
         toolButtons.appendChild(newTool)
+        return newTool
     },
 
     addOption: function(optionName, mode, onClick) {
@@ -902,6 +903,9 @@ function processMessage(event) {
         event.source.postMessage({ type: "dropdownAnswers", ...getDropdownAnswers() }, "*")
     } else if (event.data?.loadDropdownAnswers) {
         loadDropdownAnswers(event.data.loadDropdownAnswers)
+    } else if (event.data?.clearDropdownQuestions) {
+        // Sent by the question editor when a question stops being Select Elements + Dropdown
+        if (wrapper.classList.contains("editor")) clearDropdownQuestions()
     } else if (event.data?.setEditorMode) {
         if (wrapper.classList.contains("editor") && EDITOR_MODES_FROM_PARENT.includes(event.data.setEditorMode)) {
             page.mode = event.data.setEditorMode

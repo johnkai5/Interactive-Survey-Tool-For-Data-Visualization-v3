@@ -1,4 +1,4 @@
-import questionTypes from "./questionTypes.mjs"
+import questionTypes, { SELECT_DROPDOWN_TYPE } from "./questionTypes.mjs"
 
 document.addEventListener('DOMContentLoaded', () => {
     const questionType = document.getElementById("type")
@@ -154,6 +154,17 @@ document.addEventListener('DOMContentLoaded', () => {
     visualFrame?.addEventListener("load", sendEditorMode)
     questionType.addEventListener("change", sendEditorMode)
     sendEditorMode()
+
+    // Element questions only belong to Select Elements + Dropdown, so changing the type away from it
+    // clears them from the visual straight away. The API also clears them when the question is saved,
+    // in case this message is lost (for example if the page is saved before the visual finishes saving).
+    let previousType = typeInfo
+    questionType.addEventListener("change", () => {
+        if (previousType.name === SELECT_DROPDOWN_TYPE && typeInfo.name !== SELECT_DROPDOWN_TYPE && visualFrame?.contentWindow) {
+            visualFrame.contentWindow.postMessage({ clearDropdownQuestions: true }, new URL(visualFrame.src).origin)
+        }
+        previousType = typeInfo
+    })
 
     const textEntry = document.getElementById("text")
     textEntry.addEventListener("change", (event) =>{

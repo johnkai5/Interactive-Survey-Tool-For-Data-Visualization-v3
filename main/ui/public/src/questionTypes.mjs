@@ -88,6 +88,9 @@ function requestDropdownAnswers(onReply) {
     visualWindow.postMessage("dropdownAnswers", visualURL)
 }
 
+// Name of the per-element dropdown type; question editor code compares against it.
+export const SELECT_DROPDOWN_TYPE = "Select Elements + Dropdown"
+
 const questionTypes = [
     /**************************************************************************** 
      * Multiple Choice
@@ -423,8 +426,8 @@ const questionTypes = [
      * Select Elements + Dropdown
     *****************************************************************************/
     {
-        name: "Select Elements + Dropdown",
-        label: "Select Elements + Dropdown",
+        name: SELECT_DROPDOWN_TYPE,
+        label: SELECT_DROPDOWN_TYPE,
         description: "Click an element on the visual below to give it a question and answer choices. Participants click each of those elements and pick an answer from its dropdown.",
         // Every element that has a question must be answered, so there is nothing to make optional or limit.
         hasRequired: false,

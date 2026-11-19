@@ -107,7 +107,12 @@ onto the visual, used by the ZIP export).
   preview and the Excel and ZIP exports. Publishing does not snapshot the SVG,
   so editing element questions after publishing changes them for later
   participants. Each answer keeps the question text it answered for this
-  reason.
+  reason. Changing the question to another type removes the element
+  questions from its visual: the question editor page posts
+  `{clearDropdownQuestions}` to the visual editor as soon as the type changes
+  (which also hides the Element Questions tool; it is shown only after the
+  page opens it with `{setEditorMode}`), and `PATCH /questions/:id` strips them again on save
+  (`main/api/lib/dropdownQuestions.js`) in case that message was lost.
 - **Editor features** (zoom and pan, select elements, mark points, region
   select, tooltips, export) are modules in
   `visualization/ui/public/src/features/`. Start from

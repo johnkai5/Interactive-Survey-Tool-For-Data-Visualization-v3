@@ -78,11 +78,16 @@ app.get('/favicon.ico', (req, res, next) => {
     return
 })
 
+// The main app's URL, so the editor only takes editor-changing messages from the page that embeds it
+// (see public/src/parentMessages.js). Unset means those messages are all ignored.
+const PARENT_ORIGIN = process.env.MAIN_UI_URL || ""
+
 // debug endpoint
 app.get('/', function(req,res,next) {
     console.log("loading debug page")
     res.render("visualizer", {
-        role: "debug"
+        role: "debug",
+        parentOrigin: PARENT_ORIGIN
     })
 })
 
@@ -518,12 +523,14 @@ app.get('/:id', async function(req,res,next) {
         if (firstQuery != "static"){
             res.render("visualizer", {
                 role: firstQuery,
-                static: static
+                static: static,
+                parentOrigin: PARENT_ORIGIN
                 // SVG will be loaded via AJAX to prevent UI freezing
             })
         } else {
             res.render("visualizer", {
-                static: static
+                static: static,
+                parentOrigin: PARENT_ORIGIN
             })
         }
     } catch (e) {

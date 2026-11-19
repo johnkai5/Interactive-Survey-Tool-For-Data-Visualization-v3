@@ -8,7 +8,6 @@ import {
     readElementQuestion,
     writeElementQuestion,
     clearElementQuestion,
-    clearAllElementQuestions,
     collectAnswers,
     restoreAnswers,
     placeCard,
@@ -75,12 +74,13 @@ export function loadDropdownAnswers(saved) {
     markAnswered()
 }
 
-// For when the question changes to another type: no element questions, and no way to add new ones
-export function clearDropdownQuestions() {
+// For when the question editor switches to another type. Only the tool is hidden: the element questions
+// stay in the SVG so switching back, or leaving without saving, loses nothing. PATCH /questions/:id
+// strips them once the new type is actually saved (main/api/lib/dropdownQuestions.js).
+export function hideDropdownEditor() {
     closeCard()
     if (toolButton) toolButton.hidden = true
     if (page.mode === MODELABEL_EDITOR) page.mode = MODELABEL_DEFAULT_EDITOR
-    if (clearAllElementQuestions(visualizationElement.visualElements) > 0) autosave.save()
 }
 
 function enableListeners() {

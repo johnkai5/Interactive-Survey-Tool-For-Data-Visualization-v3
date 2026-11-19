@@ -1,6 +1,7 @@
 import {VisualizationElement} from "./visualizationElement.js"
 import {visualizerDecorator} from "./features/visualizerDecorator.js"
-import {getDropdownAnswers, loadDropdownAnswers, clearDropdownQuestions} from "./features/dropdownQuestions.js"
+import {getDropdownAnswers, loadDropdownAnswers, hideDropdownEditor} from "./features/dropdownQuestions.js"
+import {originOf, isFromTrustedParent} from "./parentMessages.js"
 
 export let debug = false
 let visualizer
@@ -889,9 +890,20 @@ export const screenToSVG = function(screenX, screenY, svg = visualizationElement
   return { x: out.x, y: out.y };
 };
 
-// Editor tools the question editor page may switch to (see editorMode in questionTypes.mjs).
-// Messages are not origin-checked here, so only these harmless tool switches are accepted.
+// Editor tools the question editor page may switch to (see editorMode in questionTypes.mjs). Kept to a
+// short list even though the message is origin-checked, so a parent can never open an unexpected tool.
 const EDITOR_MODES_FROM_PARENT = ["dropdownEditor"]
+
+// Main app origin rendered by visualization/ui/server.js from MAIN_UI_URL. Messages that change the editor
+// are ignored unless they come from that origin and from the window embedding this frame.
+const TRUSTED_PARENT_ORIGIN = originOf(document.getElementById("parent-origin")?.content)
+if (wrapper?.classList.contains("editor") && !TRUSTED_PARENT_ORIGIN) {
+    console.warn("MAIN_UI_URL is not set for the visualization UI, so the question editor page cannot control this editor")
+}
+
+function fromTrustedEditorParent(event) {
+    return wrapper.classList.contains("editor") && isFromTrustedParent(event, window, TRUSTED_PARENT_ORIGIN)
+}
 
 // Processes a message from the parent window
 function processMessage(event) {
@@ -903,11 +915,11 @@ function processMessage(event) {
         event.source.postMessage({ type: "dropdownAnswers", ...getDropdownAnswers() }, "*")
     } else if (event.data?.loadDropdownAnswers) {
         loadDropdownAnswers(event.data.loadDropdownAnswers)
-    } else if (event.data?.clearDropdownQuestions) {
+    } else if (event.data?.hideDropdownEditor) {
         // Sent by the question editor when a question stops being Select Elements + Dropdown
-        if (wrapper.classList.contains("editor")) clearDropdownQuestions()
+        if (fromTrustedEditorParent(event)) hideDropdownEditor()
     } else if (event.data?.setEditorMode) {
-        if (wrapper.classList.contains("editor") && EDITOR_MODES_FROM_PARENT.includes(event.data.setEditorMode)) {
+        if (fromTrustedEditorParent(event) && EDITOR_MODES_FROM_PARENT.includes(event.data.setEditorMode)) {
             page.mode = event.data.setEditorMode
         }
     } else if (event.data == "coordinates") {

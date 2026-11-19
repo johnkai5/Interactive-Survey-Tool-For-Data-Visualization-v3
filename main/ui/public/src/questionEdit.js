@@ -155,13 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
     visualFrame?.addEventListener("load", sendEditorMode)
     sendEditorMode()
 
-    // Leaving Select Elements + Dropdown clears its element questions straight away. The API clears them
-    // again on save, in case this message is lost.
+    // Leaving Select Elements + Dropdown only hides its tool. The element questions are deleted by the API
+    // when the new type is saved, so switching away and back before saving keeps them.
     let previousType = typeInfo
     questionType.addEventListener("change", () => {
         updateContent()
         if (previousType.name === SELECT_DROPDOWN_TYPE && typeInfo.name !== SELECT_DROPDOWN_TYPE) {
-            postToVisual({ clearDropdownQuestions: true })
+            postToVisual({ hideDropdownEditor: true })
         }
         sendEditorMode()
         previousType = typeInfo

@@ -21,6 +21,8 @@ All notable user-visible changes to this project are documented in this file.
   trackpad scrolling gives the same zoom with fewer repaints.
 - The home page and About pages now list the version 3 team. Former team
   members moved to the Past Contributors list on the home page.
+- In the question editor, the Question Type field now comes before the
+  Question Text field, since the type decides which other fields apply.
 
 ### Developer
 

@@ -54,15 +54,15 @@ jobs:
       - name: Start Docker compose
         run: |
           docker compose up --build -d
-      
-      - name: Tear down compose
-        if: always()
-        run: |
-          docker compose down --volumes --remove-orphans
 
       - name: Run npm test
         run: |
           npm test
+
+      - name: Tear down compose
+        if: always()
+        run: |
+          docker compose down --volumes --remove-orphans
 
       - name: Remove leftover MySQL containers
         if: always()

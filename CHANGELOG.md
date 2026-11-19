@@ -6,6 +6,8 @@ All notable user-visible changes to this project are documented in this file.
 
 ### Fixed
 
+- The CI workflow now runs `npm test` before `docker compose down`, so tests
+  no longer run after the Docker stack has been shut down.
 - Visualizations with many SVG elements no longer slow down each time the
   editor switches tools. Tooltip listeners used to be added to every element
   again on each tool switch, so they piled up.

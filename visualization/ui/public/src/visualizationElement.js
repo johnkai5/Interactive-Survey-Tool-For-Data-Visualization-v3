@@ -4,7 +4,7 @@
  * @type {string[]}
  * @default
  */
-const VISUAL_ELEMENT_TAGS = ["path", "rect", "circle", "ellipse", "polygon", "line", "polyline", "image", "foreignObject"]
+const VISUAL_ELEMENT_TAGS = ["path", "rect", "circle", "ellipse", "polygon", "line", "polyline"]
 
 /**
  * Class name for visual elements

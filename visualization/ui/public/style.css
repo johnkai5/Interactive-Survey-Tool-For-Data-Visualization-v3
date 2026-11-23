@@ -176,7 +176,7 @@ body {
 .selectElements .visual-element.selected,
 .setSelectable .visual-element.selectable,
 /* Treat lasso mode like create/delete for custom elements */
-:is(.create, .lasso, .delete) .visual-element.custom {
+:is(.create, .lasso, .delete, .none) .visual-element.custom {
     fill-opacity: 40% !important;
     stroke-opacity: 40% !important;
     filter: saturate(0.3) drop-shadow(0px 0px var(--visual-scale) blue) saturate(15);

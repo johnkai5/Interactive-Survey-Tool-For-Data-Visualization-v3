@@ -19,9 +19,6 @@ const visualizerBase = {
             document.getElementById("zoom-container").setAttribute("hidden", "true")
             document.getElementById("file-toolbar").setAttribute("hidden", "true")
             wrapper.setAttribute("static",true)
-        } else {
-            document.getElementById("zoom-container").removeAttribute("hidden")
-            document.getElementById("file-toolbar").removeAttribute("hidden")
         }
     },
     
@@ -110,6 +107,12 @@ const visualizerBase = {
         // send scale factor to CSS
         document.body.style.setProperty("--visual-scale", visualizationElement.scale / 80 + "px")
         document.body.style.setProperty("--zoom-scale", visualizationElement.scale / 80 + "px")
+		
+		// reveal visualization toolbar
+		if (!staticvis) {
+        document.getElementById("zoom-container").removeAttribute("hidden")
+        document.getElementById("file-toolbar").removeAttribute("hidden")
+		}
     },
 
     // called when the page mode changes

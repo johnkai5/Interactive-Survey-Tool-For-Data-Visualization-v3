@@ -203,6 +203,9 @@ function cloneAnswer(region) {
 
   function beginBox(evt) {
 
+    if (!svgElement.contains(evt.target))
+      return
+
     beforeDrawing = cloneAnswer(answer)
 
     evt.preventDefault()
@@ -215,6 +218,9 @@ function cloneAnswer(region) {
   }
 
   function beginLasso(evt) {
+
+    if (!svgElement.contains(evt.target))
+      return
 
     beforeDrawing = cloneAnswer(answer)
 
@@ -268,10 +274,10 @@ function cloneAnswer(region) {
 
     const afterDrawing = cloneAnswer(answer)
 
-        if (JSON.stringify(beforeDrawing) !== JSON.stringify(afterDrawing)) {
-            actionHistory.record(new SnapshotCommand(regionReceiver, beforeDrawing, afterDrawing))
-        }
+    if (JSON.stringify(beforeDrawing) !== JSON.stringify(afterDrawing)) {
+      actionHistory.record(new SnapshotCommand(regionReceiver, beforeDrawing, afterDrawing))
     }
+  }
 
 
   decorated.onFirstLoadSvg = function () {
@@ -328,20 +334,21 @@ function cloneAnswer(region) {
     return cloneAnswer(answer)
   }
 
-  decorated.clearRegion = function() {
-        cancelDrawing()
+  decorated.clearRegion = function () {
 
-        actionHistory.capture(regionReceiver, () => {
-            regionReceiver.restore(null)
-        })
-    }
+  cancelDrawing()
 
-  decorated.loadRegion = function(region) {
-        cancelDrawing()
-        regionReceiver.restore(region)
+  actionHistory.capture(regionReceiver, () => {
+    regionReceiver.restore(null)
+  })
+}
 
-        actionHistory.clear()
-    }
+decorated.loadRegion = function (region) {
+  cancelDrawing()
+  regionReceiver.restore(region)
 
-  return decorated
+  actionHistory.clear()
+}
+
+return decorated
 }

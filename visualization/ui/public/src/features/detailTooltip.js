@@ -19,8 +19,11 @@ export const detailTooltip = (visualizer) => {
     // calls every time the SVG is loaded
     decoratedVisualizer.onLoadSvg = function() {
         visualizer.onLoadSvg()
+		const isEditor = wrapper.classList.contains("editor")
+		if ((hoverDetails["enabled"] || isEditor) && !staticvis) {
+        document.getElementById("tooltip-container").removeAttribute("hidden");
+		}
         if (hoverDetails["enabled"] && !staticvis) {
-            document.getElementById("tooltip-container").removeAttribute("hidden");
             document.getElementById("tooltip-detail").removeAttribute("hidden");
         }
         markCreatedDetails()
@@ -42,7 +45,6 @@ export const detailTooltip = (visualizer) => {
     // calls on page DOM contents loaded as an editor
     decoratedVisualizer.onPageLoadAsEditor = function() {
         visualizer.onPageLoadAsEditor()
-        document.getElementById("tooltip-container").removeAttribute("hidden");
         document.getElementById("tooltip-setting").removeAttribute("hidden");
         document.getElementById("checkTooltip").addEventListener('change', function(e){
             hoverDetails["enabled"] = document.getElementById("checkTooltip").checked;

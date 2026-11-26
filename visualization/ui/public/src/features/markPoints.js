@@ -67,12 +67,11 @@ export const markPoints = (visualizer) => {
     decoratedVisualizer.onFirstLoadSvg = function() {
         visualizer.onFirstLoadSvg()
         if (page.mode == MODELABEL_MARK_POINTS) {
-            // undo button
+            // clear all button
             page.addOption(OPTIONTEXT_CLEAR_MARKS, MODELABEL_MARK_POINTS, () => {
-                // it should just be the last one in the DOM
                 actionHistory.capture(pointsReceiver, () => {
-                        pointsReceiver.restore([])
-                    })
+                    pointsReceiver.restore([])
+                })
             })
 
             enableMarkPoints()
@@ -84,7 +83,6 @@ export const markPoints = (visualizer) => {
 
 function enableMarkPoints() {
     let mouseDrag = false
-    let markContainer = null
 
     // mouseDrag variable is kept track of so mark isn't accidently left after clicking and dragging (panning)
     visualContainer.addEventListener("mousedown", () => {

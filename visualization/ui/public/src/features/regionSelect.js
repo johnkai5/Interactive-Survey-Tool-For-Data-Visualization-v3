@@ -56,40 +56,33 @@ export const regionSelect = (visualizer) => {
   let beforeDrawing = null
 
   const regionReceiver = {
-        read() {
-            return cloneAnswer(answer)
-        },
+    read() {
+      return cloneAnswer(answer)
+    },
 
-        restore(region) {
-            drawing = false
-            startPt = null
-            lassoPts = []
+    restore(region) {
+      drawing = false
+      startPt = null
+      lassoPts = []
 
-            wrapper.classList.remove("drawing-region")
-            answer = cloneAnswer(region)
+      wrapper.classList.remove("drawing-region")
+      answer = cloneAnswer(region)
 
-            if (!answer) {
-                clearOverlay()
-            } else if (answer.type === "rect") {
-                setOverlayD(
-                    buildRectD(
-                        answer.x,
-                        answer.y,
-                        answer.width,
-                        answer.height
-                    )
-                )
-            } else {
-                setOverlayD(buildPolyD(answer.points, true))
-            }
-        },
-    }
+      if (!answer) {
+        clearOverlay()
+      } else if (answer.type === "rect") {
+        setOverlayD(buildRectD(answer.x, answer.y, answer.width, answer.height))
+      } else {
+        setOverlayD(buildPolyD(answer.points, true))
+      }
+    },
+  }
 
-    function cancelDrawing() {
-        if (!drawing) return
+  function cancelDrawing() {
+    if (!drawing) return
 
-        regionReceiver.restore(beforeDrawing)
-    }
+    regionReceiver.restore(beforeDrawing)
+  }
 
   function ensureOverlay() {
     if (!svgElement) return
@@ -335,20 +328,19 @@ function cloneAnswer(region) {
   }
 
   decorated.clearRegion = function () {
+    cancelDrawing()
 
-  cancelDrawing()
+    actionHistory.capture(regionReceiver, () => {
+      regionReceiver.restore(null)
+    })
+  }
 
-  actionHistory.capture(regionReceiver, () => {
-    regionReceiver.restore(null)
-  })
-}
+  decorated.loadRegion = function (region) {
+    cancelDrawing()
+    regionReceiver.restore(region)
 
-decorated.loadRegion = function (region) {
-  cancelDrawing()
-  regionReceiver.restore(region)
+    actionHistory.clear()
+  }
 
-  actionHistory.clear()
-}
-
-return decorated
+  return decorated
 }

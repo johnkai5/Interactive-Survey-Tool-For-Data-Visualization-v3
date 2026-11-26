@@ -75,15 +75,15 @@ export const selectElements = (visualizer) => {
             page.addOption(OPTIONTEXT_SELECT_ALL, MODELABEL_SELECT_ELEMENTS, () => {
                 // make a select all as a single operation
                 actionHistory.capture(selectionReceiver, () => {
-                        visualizationElement.selectAll()
-                    })
+                    visualizationElement.selectAll()
+                })
             })
 
             page.addOption(OPTIONTEXT_DESELECT_ALL, MODELABEL_SELECT_ELEMENTS, () => {
-                // undo once to restore the action of deselect sll
+                // undo once to restore the action of deselect all
                 actionHistory.capture(selectionReceiver, () => {
-                        visualizationElement.deselectAll()
-                    })
+                    visualizationElement.deselectAll()
+                })
             })
         }
     }
